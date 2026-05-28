@@ -1,0 +1,207 @@
+title = "RustPress"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[[nav]]
+text = "指南"
+link = "/guide/cli/"
+
+[[nav.items]]
+text = "命令行"
+link = "/guide/cli/"
+
+[[nav.items]]
+text = "配置"
+link = "/guide/configuration/"
+
+[[nav]]
+text = "功能"
+link = "/features/markdown/"
+
+[[nav.items]]
+text = "Markdown"
+link = "/features/markdown/"
+
+[[nav.items]]
+text = "主题"
+link = "/features/theme/"
+
+[[nav.items]]
+text = "搜索"
+link = "/features/search/"
+
+[[nav.items]]
+text = "访问遮罩"
+link = "/features/access-mask/"
+
+[[nav]]
+text = "参考"
+link = "/internals/crates/"
+
+[[nav.items]]
+text = "Crates"
+link = "/internals/crates/"
+
+[locales.root]
+label = "简体中文"
+lang = "zh-CN"
+title = "RustPress"
+
+[locales.en]
+label = "English"
+lang = "en-US"
+link = "/en/"
+title = "RustPress"
+
+[[locales.en.nav]]
+text = "Guide"
+link = "guide/cli/"
+
+[[locales.en.nav.items]]
+text = "CLI"
+link = "guide/cli/"
+
+[[locales.en.nav.items]]
+text = "Configuration"
+link = "guide/configuration/"
+
+[[locales.en.nav]]
+text = "Features"
+link = "features/markdown/"
+
+[[locales.en.nav.items]]
+text = "Markdown"
+link = "features/markdown/"
+
+[[locales.en.nav.items]]
+text = "Theme"
+link = "features/theme/"
+
+[[locales.en.nav.items]]
+text = "Search"
+link = "features/search/"
+
+[[locales.en.nav.items]]
+text = "Access Mask"
+link = "features/access-mask/"
+
+[[locales.en.nav]]
+text = "Reference"
+link = "internals/crates/"
+
+[[locales.en.nav.items]]
+text = "Crates"
+link = "internals/crates/"
+
+[locales.ja]
+label = "日本語"
+lang = "ja-JP"
+link = "/ja/"
+title = "RustPress"
+
+[[locales.ja.nav]]
+text = "ガイド"
+link = "guide/cli/"
+
+[[locales.ja.nav.items]]
+text = "CLI"
+link = "guide/cli/"
+
+[[locales.ja.nav.items]]
+text = "設定"
+link = "guide/configuration/"
+
+[[locales.ja.nav]]
+text = "機能"
+link = "features/markdown/"
+
+[[locales.ja.nav.items]]
+text = "Markdown"
+link = "features/markdown/"
+
+[[locales.ja.nav.items]]
+text = "テーマ"
+link = "features/theme/"
+
+[[locales.ja.nav.items]]
+text = "検索"
+link = "features/search/"
+
+[[locales.ja.nav.items]]
+text = "アクセスマスク"
+link = "features/access-mask/"
+
+[[locales.ja.nav]]
+text = "リファレンス"
+link = "internals/crates/"
+
+[[locales.ja.nav.items]]
+text = "Crates"
+link = "internals/crates/"
+
+[locales.ko]
+label = "한국어"
+lang = "ko-KR"
+link = "/ko/"
+title = "RustPress"
+
+[[locales.ko.nav]]
+text = "가이드"
+link = "guide/cli/"
+
+[[locales.ko.nav.items]]
+text = "CLI"
+link = "guide/cli/"
+
+[[locales.ko.nav.items]]
+text = "설정"
+link = "guide/configuration/"
+
+[[locales.ko.nav]]
+text = "기능"
+link = "features/markdown/"
+
+[[locales.ko.nav.items]]
+text = "Markdown"
+link = "features/markdown/"
+
+[[locales.ko.nav.items]]
+text = "테마"
+link = "features/theme/"
+
+[[locales.ko.nav.items]]
+text = "검색"
+link = "features/search/"
+
+[[locales.ko.nav.items]]
+text = "접근 마스크"
+link = "features/access-mask/"
+
+[[locales.ko.nav]]
+text = "참조"
+link = "internals/crates/"
+
+[[locales.ko.nav.items]]
+text = "Crates"
+link = "internals/crates/"
+
+[theme]
+name = "default"
+skin = "light"
+allow_switch = true
+
+[markdown]
+mermaid = true
+code_highlight = true
+heading_anchors = true
+
+[search]
+enabled = true
+languages = ["zh", "en", "ja", "ko"]
+index_code = false
+
+[access]
+enabled = true
+mode = "mask"
+password_hint = "Enter any text to view"

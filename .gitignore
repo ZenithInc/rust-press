@@ -1,0 +1,9 @@
+/target/
+/dist/
+/site/
+/my-docs/
+**/*.rs.bk
+
+.DS_Store
+.idea/
+.vscode/

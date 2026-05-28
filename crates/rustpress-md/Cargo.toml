@@ -1,0 +1,16 @@
+[package]
+name = "rustpress-md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+once_cell.workspace = true
+pulldown-cmark.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+syntect = "5.3.0"
