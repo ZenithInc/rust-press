@@ -158,8 +158,89 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
         toc = render_toc(page),
         search_dialog = render_search_dialog(site),
         access_mask = access_mask,
-        mermaid_script = r#"<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"; mermaid.initialize({ startOnLoad: true });</script>"#,
+        mermaid_script = mermaid_script(),
     )
+}
+
+fn mermaid_script() -> &'static str {
+    r##"<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+const mermaidBlocks = Array.from(document.querySelectorAll("pre.mermaid"));
+const mermaidSources = new Map(mermaidBlocks.map(block => [block, block.textContent || ""]));
+
+function mermaidColor(name, fallback) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
+}
+
+function mermaidConfig() {
+  const isDark = document.documentElement.dataset.rpSkin === "dark";
+  const background = mermaidColor("--rp-mermaid-bg", isDark ? "#151a20" : "#ffffff");
+  const text = mermaidColor("--rp-mermaid-text", isDark ? "#edf2f4" : "#1d2528");
+  const line = mermaidColor("--rp-mermaid-line", isDark ? "#9fb4bd" : "#6c7a80");
+  const node = mermaidColor("--rp-mermaid-node-bg", isDark ? "#17382f" : "#e8f5f1");
+  const nodeBorder = mermaidColor("--rp-mermaid-node-border", isDark ? "#66c2a5" : "#176b5b");
+  const cluster = mermaidColor("--rp-mermaid-cluster-bg", isDark ? "#101820" : "#f2f8f6");
+  const clusterBorder = mermaidColor("--rp-mermaid-cluster-border", isDark ? "#3d5c54" : "#b7ccc5");
+  const label = mermaidColor("--rp-mermaid-label-bg", isDark ? "#181d23" : "#ffffff");
+
+  return {
+    startOnLoad: false,
+    theme: "base",
+    themeVariables: {
+      darkMode: isDark,
+      background,
+      primaryColor: node,
+      primaryTextColor: text,
+      primaryBorderColor: nodeBorder,
+      secondaryColor: cluster,
+      secondaryTextColor: text,
+      secondaryBorderColor: clusterBorder,
+      tertiaryColor: label,
+      tertiaryTextColor: text,
+      tertiaryBorderColor: clusterBorder,
+      mainBkg: node,
+      nodeBorder,
+      nodeTextColor: text,
+      textColor: text,
+      titleColor: text,
+      lineColor: line,
+      defaultLinkColor: line,
+      clusterBkg: cluster,
+      clusterBorder,
+      edgeLabelBackground: label,
+      labelTextColor: text,
+      actorBkg: node,
+      actorBorder: nodeBorder,
+      actorTextColor: text,
+      actorLineColor: line,
+      signalColor: line,
+      signalTextColor: text,
+      noteBkg: label,
+      noteTextColor: text,
+      noteBorderColor: clusterBorder
+    }
+  };
+}
+
+async function renderMermaid() {
+  if (mermaidBlocks.length === 0) return;
+  for (const block of mermaidBlocks) {
+    block.removeAttribute("data-processed");
+    block.textContent = mermaidSources.get(block) || "";
+  }
+  mermaid.initialize(mermaidConfig());
+  try {
+    await mermaid.run({ nodes: mermaidBlocks });
+  } catch (error) {
+    console.warn("RustPress Mermaid render failed", error);
+  }
+}
+
+renderMermaid();
+document.addEventListener("rustpress:skinchange", renderMermaid);
+</script>"##
 }
 
 fn render_top_nav(site: &SiteRender, page: &PageRender) -> String {
@@ -427,6 +508,14 @@ fn css() -> &'static str {
   --rp-code-text: #edf7f6;
   --rp-shadow: 0 12px 30px rgb(27 40 42 / 12%);
   --rp-grid-line: rgb(23 107 91 / 5%);
+  --rp-mermaid-bg: #ffffff;
+  --rp-mermaid-text: #1d2528;
+  --rp-mermaid-line: #6c7a80;
+  --rp-mermaid-node-bg: #e8f5f1;
+  --rp-mermaid-node-border: #176b5b;
+  --rp-mermaid-cluster-bg: #f2f8f6;
+  --rp-mermaid-cluster-border: #b7ccc5;
+  --rp-mermaid-label-bg: #ffffff;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -443,6 +532,14 @@ fn css() -> &'static str {
   --rp-code-text: #f2fbff;
   --rp-shadow: 0 14px 34px rgb(0 0 0 / 34%);
   --rp-grid-line: rgb(255 255 255 / 5%);
+  --rp-mermaid-bg: #151a20;
+  --rp-mermaid-text: #edf2f4;
+  --rp-mermaid-line: #9fb4bd;
+  --rp-mermaid-node-bg: #17382f;
+  --rp-mermaid-node-border: #66c2a5;
+  --rp-mermaid-cluster-bg: #101820;
+  --rp-mermaid-cluster-border: #3d5c54;
+  --rp-mermaid-label-bg: #181d23;
 }
 
 * { box-sizing: border-box; }
@@ -838,9 +935,13 @@ a:hover { text-decoration: underline; }
   min-width: max-content;
 }
 .rp-doc pre.mermaid {
-  background: var(--rp-panel);
-  color: var(--rp-text);
-  border: 1px solid var(--rp-line);
+  background: var(--rp-mermaid-bg);
+  color: var(--rp-mermaid-text);
+  border: 1px solid var(--rp-mermaid-cluster-border);
+}
+.rp-doc pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
 }
 .heading-anchor {
   display: inline-block;
@@ -1042,6 +1143,7 @@ if (skinSelect) {{
 
   function setSkin(skin, persist) {{
     if (!supportedSkins.includes(skin)) skin = "light";
+    const previousSkin = root.dataset.rpSkin;
     root.dataset.rpSkin = skin;
     if (skinCurrent) skinCurrent.textContent = skin === "dark" ? "Dark" : "Light";
     for (const option of skinOptions) {{
@@ -1050,6 +1152,9 @@ if (skinSelect) {{
       option.setAttribute("aria-selected", selected ? "true" : "false");
     }}
     if (persist) localStorage.setItem("rustpress:skin", skin);
+    if (previousSkin !== skin) {{
+      document.dispatchEvent(new CustomEvent("rustpress:skinchange", {{ detail: {{ skin }} }}));
+    }}
   }}
 }}
 
@@ -1302,9 +1407,28 @@ mod tests {
         assert!(html.contains("rp-topnav-trigger"));
         assert!(html.contains("Reference"));
         assert!(!html.contains("<details"));
+        assert!(html.contains("theme: \"base\""));
+        assert!(html.contains("themeVariables"));
+        assert!(html.contains("mermaid.run({ nodes: mermaidBlocks })"));
+        assert!(!html.contains("startOnLoad: true"));
 
         let js = js(&site());
         assert!(js.contains("lastShiftPress"));
         assert!(js.contains(r#"event.key !== "Shift""#));
+        assert!(js.contains("rustpress:skinchange"));
+        assert!(js.contains(r#"new CustomEvent("rustpress:skinchange""#));
+    }
+
+    #[test]
+    fn css_includes_mermaid_theme_colors() {
+        let styles = css();
+        assert!(styles.contains("--rp-mermaid-bg: #ffffff;"));
+        assert!(styles.contains("--rp-mermaid-text: #1d2528;"));
+        assert!(styles.contains("--rp-mermaid-line: #6c7a80;"));
+        assert!(styles.contains("--rp-mermaid-bg: #151a20;"));
+        assert!(styles.contains("--rp-mermaid-text: #edf2f4;"));
+        assert!(styles.contains("--rp-mermaid-line: #9fb4bd;"));
+        assert!(styles.contains(".rp-doc pre.mermaid svg"));
+        assert!(styles.contains("max-width: 100%;"));
     }
 }
