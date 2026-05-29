@@ -14,8 +14,18 @@ access: masked
 
 ## 测试行为
 
-在密码字段输入任意文本，即可在当前浏览器会话中隐藏遮罩。
+当前示例站点在 `[access].password` 中配置了演示密码。输入正确密码后，遮罩会在当前浏览器会话中隐藏。
+
+```toml
+[access]
+enabled = true
+mode = "mask"
+password = "rustpress"
+password_hint = "Enter password"
+```
+
+如果没有配置 `password`，`access: masked` 页面不会显示遮罩。
 
 ## 说明
 
-访问遮罩只是前端界面遮挡，不是安全保护。构建产物中的 HTML 仍然可以直接查看。
+访问遮罩只是前端界面遮挡，不是安全保护。构建产物中的 HTML 和前端脚本仍然可以直接查看。

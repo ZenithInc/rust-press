@@ -34,6 +34,7 @@ link = "/guide/configuration/"
 name = "default"
 skin = "light"
 allow_switch = true
+github_url = "https://github.com/your-org/your-repo"
 
 [markdown]
 mermaid = true
@@ -48,6 +49,7 @@ index_code = false
 [access]
 enabled = true
 mode = "mask"
+password = "demo123"
 password_hint = "Enter password"
 ```
 
@@ -63,7 +65,7 @@ access: public
 ---
 ```
 
-`access` can be `public` or `masked`. `search: false` excludes the page from the generated search index.
+`access` can be `public` or `masked`. Masked pages show the access overlay only when `[access].password` is configured. `search: false` excludes the page from the generated search index.
 
 ## Top Navigation
 

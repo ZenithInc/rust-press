@@ -14,8 +14,18 @@ access: masked
 
 ## 동작 확인
 
-비밀번호 필드에 아무 텍스트나 입력하면 이 브라우저 세션에서 오버레이가 숨겨집니다.
+예제 사이트는 `[access].password`에 데모 비밀번호를 설정합니다. 올바른 비밀번호를 입력하면 이 브라우저 세션에서 오버레이가 숨겨집니다.
+
+```toml
+[access]
+enabled = true
+mode = "mask"
+password = "rustpress"
+password_hint = "Enter password"
+```
+
+`password`가 설정되지 않은 경우 `access: masked` 페이지에는 오버레이가 표시되지 않습니다.
 
 ## 참고
 
-접근 마스크는 프런트엔드 오버레이일 뿐 보안 보호가 아닙니다. 생성된 HTML은 직접 볼 수 있습니다.
+접근 마스크는 프런트엔드 오버레이일 뿐 보안 보호가 아닙니다. 생성된 HTML과 프런트엔드 스크립트는 직접 볼 수 있습니다.

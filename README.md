@@ -89,6 +89,7 @@ link = "/guide/cli/"
 name = "default"
 skin = "light"
 allow_switch = true
+github_url = "https://github.com/your-org/your-repo"
 
 [markdown]
 mermaid = true
@@ -103,6 +104,7 @@ index_code = false
 [access]
 enabled = true
 mode = "mask"
+password = "demo123"
 password_hint = "Enter password"
 ```
 

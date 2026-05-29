@@ -34,6 +34,7 @@ link = "/guide/configuration/"
 name = "default"
 skin = "light"
 allow_switch = true
+github_url = "https://github.com/your-org/your-repo"
 
 [markdown]
 mermaid = true
@@ -48,6 +49,7 @@ index_code = false
 [access]
 enabled = true
 mode = "mask"
+password = "demo123"
 password_hint = "Enter password"
 ```
 
@@ -63,7 +65,7 @@ access: public
 ---
 ```
 
-`access` は `public` または `masked` にできます。`search: false` を指定すると、そのページは生成される検索インデックスから除外されます。
+`access` は `public` または `masked` にできます。`[access].password` が設定されている場合のみ、`masked` ページにアクセスマスクが表示されます。`search: false` を指定すると、そのページは生成される検索インデックスから除外されます。
 
 ## トップナビゲーション
 

@@ -15,6 +15,10 @@ link = "/guide/cli/"
 text = "配置"
 link = "/guide/configuration/"
 
+[[nav.items]]
+text = "Markdown 教程"
+link = "/guide/markdown-tutorial/"
+
 [[nav]]
 text = "功能"
 link = "/features/markdown/"
@@ -66,6 +70,10 @@ link = "guide/cli/"
 text = "Configuration"
 link = "guide/configuration/"
 
+[[locales.en.nav.items]]
+text = "Markdown Tutorial"
+link = "guide/markdown-tutorial/"
+
 [[locales.en.nav]]
 text = "Features"
 link = "features/markdown/"
@@ -111,6 +119,10 @@ link = "guide/cli/"
 [[locales.ja.nav.items]]
 text = "設定"
 link = "guide/configuration/"
+
+[[locales.ja.nav.items]]
+text = "Markdown チュートリアル"
+link = "guide/markdown-tutorial/"
 
 [[locales.ja.nav]]
 text = "機能"
@@ -158,6 +170,10 @@ link = "guide/cli/"
 text = "설정"
 link = "guide/configuration/"
 
+[[locales.ko.nav.items]]
+text = "Markdown 튜토리얼"
+link = "guide/markdown-tutorial/"
+
 [[locales.ko.nav]]
 text = "기능"
 link = "features/markdown/"
@@ -190,6 +206,7 @@ link = "internals/crates/"
 name = "default"
 skin = "light"
 allow_switch = true
+github_url = "https://github.com/ZenithInc/rust-press"
 
 [markdown]
 mermaid = true
@@ -204,4 +221,5 @@ index_code = false
 [access]
 enabled = true
 mode = "mask"
-password_hint = "Enter any text to view"
+password = "rustpress"
+password_hint = "Enter password"

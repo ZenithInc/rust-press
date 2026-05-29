@@ -19,6 +19,15 @@ access: public
 
 `allow_switch = true`이면 상단 바에 Light/Dark 전환기가 표시되고 선택한 모드가 `localStorage`에 저장됩니다.
 
+## GitHub 링크
+
+`[theme]`에 `github_url`을 설정하면 상단 바 오른쪽에 GitHub 아이콘이 표시됩니다. 아이콘을 클릭하면 설정한 저장소가 열립니다.
+
+```toml
+[theme]
+github_url = "https://github.com/your-org/your-repo"
+```
+
 ## 레이아웃
 
 생성된 페이지에는 다음이 포함됩니다.

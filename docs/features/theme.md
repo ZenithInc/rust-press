@@ -19,6 +19,15 @@ access: public
 
 当 `allow_switch = true` 时，顶部栏会显示 Light/Dark 切换器，并把选择保存到 `localStorage`。
 
+## GitHub 链接
+
+在 `[theme]` 中配置 `github_url` 后，顶部栏右侧会显示 GitHub 图标。点击图标会打开对应的仓库。
+
+```toml
+[theme]
+github_url = "https://github.com/your-org/your-repo"
+```
+
 ## 布局
 
 生成的页面包含：

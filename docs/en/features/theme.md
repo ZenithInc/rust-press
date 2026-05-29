@@ -19,6 +19,15 @@ The theme exposes two built-in color modes:
 
 When `allow_switch = true`, the top bar shows a Light/Dark switcher and saves the selected mode to `localStorage`.
 
+## GitHub Link
+
+Configure `github_url` in `[theme]` to show a GitHub icon on the right side of the top bar. The icon opens the configured repository.
+
+```toml
+[theme]
+github_url = "https://github.com/your-org/your-repo"
+```
+
 ## Layout
 
 The generated pages include:

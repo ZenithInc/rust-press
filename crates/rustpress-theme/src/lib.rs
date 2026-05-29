@@ -8,6 +8,7 @@ use rustpress_md::Heading;
 pub struct ThemeConfig {
     pub skin: String,
     pub allow_switch: bool,
+    pub github_url: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +20,7 @@ pub struct SiteRender {
     pub theme: ThemeConfig,
     pub search_enabled: bool,
     pub access_enabled: bool,
+    pub access_password: String,
     pub password_hint: String,
     pub top_nav: Vec<TopNavItem>,
     pub nav: Vec<NavItem>,
@@ -92,6 +94,7 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
     } else {
         String::new()
     };
+    let github_link = render_github_link(site);
     let language_switcher = render_language_switcher(site);
     let access_mask = if site.access_enabled && page.masked {
         render_access_mask(site)
@@ -119,6 +122,7 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
     <button class="rp-icon-button rp-menu-button" data-rp-menu aria-label="Toggle navigation" title="Navigation">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
     </button>
+    {github_link}
   </div>
 </header>
 <div class="rp-shell">
@@ -153,6 +157,7 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
         search_markup = search_markup,
         language_switcher = language_switcher,
         skin_switcher = skin_switcher,
+        github_link = github_link,
         nav = render_nav(site, page),
         content = page.html,
         toc = render_toc(page),
@@ -404,6 +409,20 @@ fn render_skin_switcher(site: &SiteRender) -> String {
     )
 }
 
+fn render_github_link(site: &SiteRender) -> String {
+    let href = site.theme.github_url.trim();
+    if href.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        r#"<a class="rp-icon-button rp-github-link" href="{href}" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" title="GitHub">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.59 2 12.25c0 4.53 2.87 8.37 6.84 9.72.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.32 9.32 0 0 1 12 7.01c.85 0 1.71.12 2.51.35 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.95.68 1.91 0 1.38-.01 2.49-.01 2.83 0 .27.18.59.69.49A10.22 10.22 0 0 0 22 12.25C22 6.59 17.52 2 12 2Z"></path></svg>
+</a>"#,
+        href = escape_attr(href)
+    )
+}
+
 fn skin_label(skin: &str) -> &'static str {
     match skin {
         "dark" => "Dark",
@@ -466,7 +485,8 @@ fn render_access_mask(site: &SiteRender) -> String {
   <form class="rp-access-panel" data-rp-access-form>
     <h2>Masked content</h2>
     <p>This is a front-end viewing mask. Static files still contain the page content.</p>
-    <input data-rp-access-input type="password" placeholder="{hint}" aria-label="{hint}">
+    <input data-rp-access-input type="password" placeholder="{hint}" aria-label="{hint}" autocomplete="current-password" required>
+    <p class="rp-access-error" data-rp-access-error hidden>Incorrect password.</p>
     <button type="submit">View page</button>
   </form>
 </div>"#,
@@ -504,6 +524,7 @@ fn css() -> &'static str {
   --rp-line: #dbe1de;
   --rp-accent: #176b5b;
   --rp-accent-soft: #dff0eb;
+  --rp-danger: #b42318;
   --rp-code-bg: #172026;
   --rp-code-text: #edf7f6;
   --rp-shadow: 0 12px 30px rgb(27 40 42 / 12%);
@@ -528,6 +549,7 @@ fn css() -> &'static str {
   --rp-line: #2d3741;
   --rp-accent: #66c2a5;
   --rp-accent-soft: #12392f;
+  --rp-danger: #fca5a5;
   --rp-code-bg: #0b1117;
   --rp-code-text: #f2fbff;
   --rp-shadow: 0 14px 34px rgb(0 0 0 / 34%);
@@ -686,6 +708,11 @@ a:hover { text-decoration: underline; }
 .rp-icon-button:hover {
   border-color: var(--rp-accent);
   color: var(--rp-accent);
+  text-decoration: none;
+}
+.rp-github-link svg {
+  fill: currentColor;
+  stroke: none;
 }
 .rp-select {
   position: relative;
@@ -1054,6 +1081,15 @@ h6:hover .heading-anchor { opacity: 1; text-decoration: none; }
   padding: 0 10px;
   font: inherit;
 }
+.rp-access-panel input[aria-invalid="true"] {
+  border-color: var(--rp-danger);
+}
+.rp-access-error {
+  margin: 8px 0 0;
+  color: var(--rp-danger);
+  font-size: 13px;
+  line-height: 1.4;
+}
 .rp-access-panel button {
   margin-top: 12px;
   width: 100%;
@@ -1105,6 +1141,7 @@ fn js(site: &SiteRender) -> String {
     format!(
         r##"const base = {base:?};
 const defaultSkin = {skin:?};
+const accessPassword = {access_password:?};
 const supportedSkins = ["light", "dark"];
 
 const root = document.documentElement;
@@ -1190,14 +1227,30 @@ if (menu && sidebar) {{
 
 const mask = document.querySelector("[data-rp-access-mask]");
 const accessForm = document.querySelector("[data-rp-access-form]");
+const accessInput = document.querySelector("[data-rp-access-input]");
+const accessError = document.querySelector("[data-rp-access-error]");
 if (mask && accessForm) {{
   const key = "rustpress:access:" + location.pathname;
   if (sessionStorage.getItem(key) === "unlocked") mask.classList.add("is-unlocked");
   accessForm.addEventListener("submit", event => {{
     event.preventDefault();
+    if (!accessInput || accessInput.value !== accessPassword) {{
+      if (accessError) accessError.hidden = false;
+      if (accessInput) {{
+        accessInput.setAttribute("aria-invalid", "true");
+        accessInput.focus();
+      }}
+      return;
+    }}
     sessionStorage.setItem(key, "unlocked");
     mask.classList.add("is-unlocked");
   }});
+  if (accessInput) {{
+    accessInput.addEventListener("input", () => {{
+      accessInput.removeAttribute("aria-invalid");
+      if (accessError) accessError.hidden = true;
+    }});
+  }}
 }}
 
 const searchDialog = document.querySelector("[data-rp-search]");
@@ -1309,7 +1362,8 @@ function escapeHtml(value) {{
 }}
 "##,
         base = site.base,
-        skin = site.theme.skin
+        skin = site.theme.skin,
+        access_password = site.access_password
     )
 }
 
@@ -1337,9 +1391,11 @@ mod tests {
             theme: ThemeConfig {
                 skin: "light".to_string(),
                 allow_switch: true,
+                github_url: "https://github.com/ZenithInc/rust-press".to_string(),
             },
             search_enabled: true,
             access_enabled: true,
+            access_password: "rustpress".to_string(),
             password_hint: "Password".to_string(),
             top_nav: vec![
                 TopNavItem {
@@ -1401,7 +1457,12 @@ mod tests {
         assert!(!html.contains("<select"));
         assert!(!html.contains("<option"));
         assert!(html.contains(r#"data-rp-language-href="/">English</button>"#));
+        assert!(html.contains(r#"class="rp-icon-button rp-github-link""#));
+        assert!(html.contains(r#"href="https://github.com/ZenithInc/rust-press""#));
+        assert!(html.contains(r#"aria-label="GitHub repository""#));
         assert!(html.contains("data-rp-access-mask"));
+        assert!(html.contains("data-rp-access-error"));
+        assert!(html.contains("autocomplete=\"current-password\""));
         assert!(html.contains("front-end viewing mask"));
         assert!(html.contains("rp-topnav-group"));
         assert!(html.contains("rp-topnav-trigger"));
@@ -1414,6 +1475,9 @@ mod tests {
 
         let js = js(&site());
         assert!(js.contains("lastShiftPress"));
+        assert!(js.contains(r#"const accessPassword = "rustpress";"#));
+        assert!(js.contains("accessInput.value !== accessPassword"));
+        assert!(js.contains(r#"accessInput.setAttribute("aria-invalid", "true")"#));
         assert!(js.contains(r#"event.key !== "Shift""#));
         assert!(js.contains("rustpress:skinchange"));
         assert!(js.contains(r#"new CustomEvent("rustpress:skinchange""#));
@@ -1429,6 +1493,28 @@ mod tests {
         assert!(styles.contains("--rp-mermaid-text: #edf2f4;"));
         assert!(styles.contains("--rp-mermaid-line: #9fb4bd;"));
         assert!(styles.contains(".rp-doc pre.mermaid svg"));
+        assert!(styles.contains(".rp-github-link svg"));
         assert!(styles.contains("max-width: 100%;"));
+    }
+
+    #[test]
+    fn omits_github_link_without_theme_url() {
+        let mut site = site();
+        site.theme.github_url.clear();
+
+        let html = render_page(
+            &site,
+            &PageRender {
+                title: "Home".to_string(),
+                route: "/".to_string(),
+                html: "<h1>Home</h1>".to_string(),
+                headings: vec![],
+                masked: false,
+                search: true,
+            },
+        );
+
+        assert!(!html.contains("rp-github-link"));
+        assert!(!html.contains("GitHub repository"));
     }
 }

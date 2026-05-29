@@ -34,6 +34,7 @@ link = "/guide/configuration/"
 name = "default"
 skin = "light"
 allow_switch = true
+github_url = "https://github.com/your-org/your-repo"
 
 [markdown]
 mermaid = true
@@ -48,6 +49,7 @@ index_code = false
 [access]
 enabled = true
 mode = "mask"
+password = "demo123"
 password_hint = "Enter password"
 ```
 
@@ -63,7 +65,7 @@ access: public
 ---
 ```
 
-`access` 可以是 `public` 或 `masked`。`search: false` 会将页面排除在生成的搜索索引之外。
+`access` 可以是 `public` 或 `masked`。只有配置了 `[access].password` 时，`masked` 页面才会显示访问遮罩。`search: false` 会将页面排除在生成的搜索索引之外。
 
 ## 顶部导航
 

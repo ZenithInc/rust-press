@@ -54,6 +54,7 @@ pub struct ThemeSection {
     pub name: String,
     pub skin: String,
     pub allow_switch: bool,
+    pub github_url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,6 +78,7 @@ pub struct SearchSection {
 pub struct AccessSection {
     pub enabled: bool,
     pub mode: String,
+    pub password: String,
     pub password_hint: String,
 }
 
@@ -128,6 +130,7 @@ impl Default for ThemeSection {
             name: "default".to_string(),
             skin: "light".to_string(),
             allow_switch: true,
+            github_url: String::new(),
         }
     }
 }
@@ -157,6 +160,7 @@ impl Default for AccessSection {
         Self {
             enabled: true,
             mode: "mask".to_string(),
+            password: String::new(),
             password_hint: "Enter password".to_string(),
         }
     }
@@ -214,6 +218,8 @@ impl Config {
             self.base.push('/');
         }
         self.theme.skin = normalize_theme_skin(&self.theme.skin);
+        self.theme.github_url = self.theme.github_url.trim().to_string();
+        self.access.password = self.access.password.trim().to_string();
         normalize_nav(&mut self.nav, None);
 
         if !self.locales.is_empty() {
@@ -292,6 +298,7 @@ link = "/private/"
 name = "default"
 skin = "light"
 allow_switch = true
+github_url = ""
 
 [markdown]
 mermaid = true
@@ -306,6 +313,7 @@ index_code = false
 [access]
 enabled = true
 mode = "mask"
+password = "rustpress"
 password_hint = "Enter password"
 "#,
     )?;
@@ -651,7 +659,8 @@ fn base_site_render(config: &Config) -> SiteRender {
         home_href: "/".to_string(),
         theme: theme_config(config),
         search_enabled: config.search.enabled,
-        access_enabled: config.access.enabled && config.access.mode == "mask",
+        access_enabled: access_mask_enabled(config),
+        access_password: config.access.password.clone(),
         password_hint: config.access.password_hint.clone(),
         top_nav: build_top_nav(config, "root"),
         nav: Vec::new(),
@@ -672,7 +681,8 @@ fn site_render_for_page(
         home_href: home_for_locale(config, &page.locale_key),
         theme: theme_config(config),
         search_enabled: config.search.enabled,
-        access_enabled: config.access.enabled && config.access.mode == "mask",
+        access_enabled: access_mask_enabled(config),
+        access_password: config.access.password.clone(),
         password_hint: config.access.password_hint.clone(),
         top_nav: build_top_nav(config, &page.locale_key),
         nav: build_nav(pages, config, &page.locale_key),
@@ -680,10 +690,15 @@ fn site_render_for_page(
     }
 }
 
+fn access_mask_enabled(config: &Config) -> bool {
+    config.access.enabled && config.access.mode == "mask" && !config.access.password.is_empty()
+}
+
 fn theme_config(config: &Config) -> ThemeConfig {
     ThemeConfig {
         skin: config.theme.skin.clone(),
         allow_switch: config.theme.allow_switch,
+        github_url: config.theme.github_url.clone(),
     }
 }
 
@@ -1099,11 +1114,28 @@ mod tests {
 
         let public_html = fs::read_to_string(dir.path().join("dist/index.html")).unwrap();
         let masked_html = fs::read_to_string(dir.path().join("dist/private/index.html")).unwrap();
+        let theme_js = fs::read_to_string(dir.path().join("dist/assets/rustpress.js")).unwrap();
         assert!(public_html.contains("rp-topnav-group"));
         assert!(public_html.contains("Masked Page"));
         assert!(!public_html.contains("data-rp-language-select"));
         assert!(!public_html.contains("data-rp-access-mask"));
         assert!(masked_html.contains("data-rp-access-mask"));
+        assert!(theme_js.contains(r#"const accessPassword = "rustpress";"#));
+    }
+
+    #[test]
+    fn access_mask_requires_configured_password() {
+        let mut config = Config::default();
+        config.access.enabled = true;
+        config.access.mode = "mask".to_string();
+        config.access.password.clear();
+        assert!(!access_mask_enabled(&config));
+
+        config.access.password = "secret".to_string();
+        assert!(access_mask_enabled(&config));
+
+        config.access.enabled = false;
+        assert!(!access_mask_enabled(&config));
     }
 
     #[test]
@@ -1137,6 +1169,39 @@ mod tests {
         };
         old_skin_config.normalize().unwrap();
         assert_eq!(old_skin_config.theme.skin, "light");
+    }
+
+    #[test]
+    fn theme_github_url_is_rendered_when_configured() {
+        let raw = r#"
+title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[theme]
+github_url = " https://github.com/example/docs "
+"#;
+        let mut config: Config = toml::from_str(raw).unwrap();
+        config.normalize().unwrap();
+
+        assert_eq!(config.theme.github_url, "https://github.com/example/docs");
+
+        let site = base_site_render(&config);
+        let html = render_page(
+            &site,
+            &PageRender {
+                title: "Home".to_string(),
+                route: "/".to_string(),
+                html: "<h1>Home</h1>".to_string(),
+                headings: vec![],
+                masked: false,
+                search: true,
+            },
+        );
+
+        assert!(html.contains("rp-github-link"));
+        assert!(html.contains(r#"href="https://github.com/example/docs""#));
     }
 
     #[test]
