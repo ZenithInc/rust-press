@@ -204,12 +204,10 @@ fn render_html(events: Vec<Event<'_>>, headings: &[Heading], options: &MarkdownO
                     in_code_block = true;
                     code_lang = lang;
                     out_events.push(Event::Html(CowStr::from("<pre class=\"mermaid\">")));
-                } else if options.code_highlight {
+                } else {
                     in_code_block = true;
                     code_lang = lang;
                     code_text.clear();
-                } else {
-                    out_events.push(Event::Start(Tag::CodeBlock(kind)));
                 }
             }
             Event::Text(text) if in_code_block && code_lang.as_deref() == Some("mermaid") => {
@@ -225,6 +223,7 @@ fn render_html(events: Vec<Event<'_>>, headings: &[Heading], options: &MarkdownO
                     out_events.push(Event::Html(CowStr::from(render_code_block(
                         &code_text,
                         code_lang.as_deref(),
+                        options.code_highlight,
                     ))));
                     code_text.clear();
                 }
@@ -240,11 +239,15 @@ fn render_html(events: Vec<Event<'_>>, headings: &[Heading], options: &MarkdownO
     rendered
 }
 
-fn render_code_block(code: &str, lang: Option<&str>) -> String {
+fn render_code_block(code: &str, lang: Option<&str>, highlight: bool) -> String {
     let normalized_lang = lang
         .map(normalize_code_lang)
         .filter(|lang| !lang.is_empty());
-    let highlighted = highlight_code(code, normalized_lang);
+    let content = if highlight {
+        highlight_code(code, normalized_lang)
+    } else {
+        escape_html(code)
+    };
     let lang_class = normalized_lang
         .map(|lang| format!(" language-{}", escape_attr(lang)))
         .unwrap_or_default();
@@ -258,7 +261,7 @@ fn render_code_block(code: &str, lang: Option<&str>) -> String {
         .unwrap_or_default();
 
     format!(
-        r#"<div class="rp-code">{header}<pre><code class="rp-code-content{lang_class}">{highlighted}</code></pre></div>"#
+        r#"<div class="rp-code">{header}<button class="rp-code-copy" type="button" data-rp-copy-code aria-label="Copy code" title="Copy code"><svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button><pre><code class="rp-code-content{lang_class}">{content}</code></pre></div>"#
     )
 }
 
@@ -427,10 +430,11 @@ mod tests {
 
         assert!(doc.html.contains("<pre class=\"mermaid\">"));
         assert!(doc.html.contains("A--&gt;B"));
+        assert!(!doc.html.contains("data-rp-copy-code"));
     }
 
     #[test]
-    fn fenced_code_is_highlighted_with_syntect() {
+    fn fenced_code_has_copy_button_and_is_highlighted_with_syntect() {
         let doc = parse_markdown(
             "```rust\nfn main() {\n    println!(\"hi\");\n}\n```",
             MarkdownOptions::default(),
@@ -438,15 +442,18 @@ mod tests {
         .unwrap();
 
         assert!(doc.html.contains("class=\"rp-code\""));
+        assert!(doc.html.contains("class=\"rp-code-copy\""));
+        assert!(doc.html.contains("data-rp-copy-code"));
+        assert!(doc.html.contains("aria-label=\"Copy code\""));
         assert!(doc.html.contains("language-rust"));
         assert!(doc.html.contains("<span style="));
         assert!(doc.html.contains("println"));
     }
 
     #[test]
-    fn code_highlight_can_be_disabled() {
+    fn code_highlight_can_be_disabled_without_removing_copy_button() {
         let doc = parse_markdown(
-            "```rust\nfn main() {}\n```",
+            "```rust\nfn main() { println!(\"<hi>\"); }\n```",
             MarkdownOptions {
                 code_highlight: false,
                 ..MarkdownOptions::default()
@@ -454,8 +461,11 @@ mod tests {
         )
         .unwrap();
 
-        assert!(!doc.html.contains("class=\"rp-code\""));
-        assert!(doc.html.contains("<pre><code class=\"language-rust\">"));
+        assert!(doc.html.contains("class=\"rp-code\""));
+        assert!(doc.html.contains("data-rp-copy-code"));
+        assert!(doc.html.contains("class=\"rp-code-content language-rust\""));
+        assert!(doc.html.contains("println!(\"&lt;hi&gt;\")"));
+        assert!(!doc.html.contains("<span style="));
     }
 
     #[test]

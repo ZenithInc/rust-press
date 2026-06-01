@@ -4,6 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/rustpress-md"
+description = "Markdown parsing and HTML rendering for RustPress"
+readme = "../../README.md"
+keywords = ["markdown", "docs", "documentation", "html"]
+categories = ["parser-implementations", "web-programming"]
 rust-version.workspace = true
 
 [dependencies]

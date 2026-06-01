@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crates/rustpress-cli",
+    "crates/rust-press",
     "crates/rustpress-core",
     "crates/rustpress-dev",
     "crates/rustpress-md",
@@ -12,9 +12,10 @@ resolver = "2"
 [workspace.package]
 edition = "2021"
 license = "MIT"
-repository = "https://example.invalid/rustpress"
+repository = "https://github.com/ZenithInc/rust-press"
+homepage = "https://github.com/ZenithInc/rust-press"
 rust-version = "1.93"
-version = "0.1.0"
+version = "0.1.1"
 
 [workspace.dependencies]
 anyhow = "1.0.98"

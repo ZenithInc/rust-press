@@ -9,7 +9,7 @@ use rustpress_dev::{serve_dev, serve_preview, ServeOptions};
 #[command(
     name = "rust-press",
     version,
-    about = "Rust-first static documentation generator"
+    about = "Rust-first static documentation generator CLI"
 )]
 struct Cli {
     #[command(subcommand)]

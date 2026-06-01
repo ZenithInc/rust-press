@@ -49,7 +49,7 @@ jobs:
         run: cargo test
 
       - name: Build docs
-        run: cargo run -p rustpress-cli -- build --config rustpress.pages.toml
+        run: cargo run -p rust-press -- build --config rustpress.pages.toml
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

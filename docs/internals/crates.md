@@ -10,7 +10,7 @@ access: public
 
 工作区被拆分为多个小 crate。
 
-## rustpress-cli
+## rust-press
 
 解析命令行参数并分发命令。
 

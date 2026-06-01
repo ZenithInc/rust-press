@@ -10,7 +10,7 @@ access: public
 
 ワークスペースは小さな crate に分割されています。
 
-## rustpress-cli
+## rust-press
 
 コマンドライン引数を解析し、コマンドをディスパッチします。
 

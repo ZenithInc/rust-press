@@ -10,7 +10,7 @@ access: public
 
 The workspace is split into small crates.
 
-## rustpress-cli
+## rust-press
 
 Parses command-line arguments and dispatches commands.
 

@@ -1,0 +1,23 @@
+[package]
+name = "rust-press"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/rust-press"
+description = "Rust-first static documentation generator CLI"
+readme = "../../README.md"
+keywords = ["docs", "documentation", "static-site", "markdown"]
+categories = ["command-line-utilities", "web-programming"]
+rust-version.workspace = true
+
+[[bin]]
+name = "rust-press"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+rustpress-core = { version = "0.1.1", path = "../rustpress-core" }
+rustpress-dev = { version = "0.1.1", path = "../rustpress-dev" }

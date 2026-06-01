@@ -10,7 +10,7 @@ access: public
 
 워크스페이스는 작은 crate들로 나뉘어 있습니다.
 
-## rustpress-cli
+## rust-press
 
 명령줄 인자를 파싱하고 명령을 dispatch합니다.
 

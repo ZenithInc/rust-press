@@ -28,28 +28,36 @@ HTML content, or provide server-side authentication.
 
 ## Quick Start
 
+Install the CLI from this checkout:
+
+```bash
+cargo install --path crates/rust-press
+rust-press --version
+```
+
+After the first crates.io release is published, you can use `cargo install rust-press` instead.
+
 Create a new documentation project:
 
 ```bash
-cargo run -p rustpress-cli -- init my-docs
+rust-press init my-docs
 cd my-docs
-cargo run -p rustpress-cli -- build
-cargo run -p rustpress-cli -- preview --port 4177
+rust-press build
+rust-press preview --port 4177
 ```
 
 When working from this repository, pass the generated config path explicitly:
 
 ```bash
-cargo run -p rustpress-cli -- init site
-cargo run -p rustpress-cli -- build --config site/rustpress.toml
-cargo run -p rustpress-cli -- preview --config site/rustpress.toml
+cargo run -p rust-press -- init site
+cargo run -p rust-press -- build --config site/rustpress.toml
+cargo run -p rust-press -- preview --config site/rustpress.toml
 ```
 
-You can also install the CLI from this checkout:
+You can also run the CLI without installing it:
 
 ```bash
-cargo install --path crates/rustpress-cli
-rust-press --help
+cargo run -p rust-press -- --help
 ```
 
 ## Commands
@@ -126,7 +134,7 @@ the generated search index.
 ## Repository Layout
 
 ```text
-crates/rustpress-cli      CLI entry point
+crates/rust-press         CLI entry point
 crates/rustpress-core     Config, routing, site build pipeline
 crates/rustpress-dev      Dev and preview servers
 crates/rustpress-md       Markdown parsing and HTML rendering
@@ -154,6 +162,27 @@ Format code:
 ```bash
 cargo fmt
 ```
+
+## Publishing
+
+The crates.io install package is `rust-press`; it installs the `rust-press`
+binary. Internal crates must be published first because Cargo resolves packaged
+path dependencies from crates.io.
+
+Publish order:
+
+```bash
+cargo publish -p rustpress-md
+cargo publish -p rustpress-search
+cargo publish -p rustpress-theme
+cargo publish -p rustpress-core
+cargo publish -p rustpress-dev
+cargo publish -p rust-press
+```
+
+Before publishing, run `cargo test` and then `cargo publish --dry-run -p <crate>`
+in the same order. Pushing a tag such as `v0.1.1` builds GitHub Releases
+archives for Linux, macOS, and Windows.
 
 ## License
 

@@ -933,6 +933,7 @@ a:hover { text-decoration: underline; }
   border-radius: 0;
 }
 .rp-code {
+  position: relative;
   margin: 20px 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--rp-code-bg) 78%, var(--rp-line));
@@ -944,7 +945,7 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: center;
   min-height: 34px;
-  padding: 0 14px;
+  padding: 0 54px 0 14px;
   border-bottom: 1px solid rgb(255 255 255 / 8%);
   background: color-mix(in srgb, var(--rp-code-bg) 82%, black);
   color: rgb(237 247 246 / 72%);
@@ -952,8 +953,65 @@ a:hover { text-decoration: underline; }
   font-weight: 700;
   line-height: 1;
 }
+.rp-code-copy {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--rp-code-bg) 78%, white);
+  color: rgb(237 247 246 / 76%);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease, opacity 140ms ease;
+}
+.rp-code-copy svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.rp-code-copy-check {
+  display: none;
+}
+.rp-code-copy:hover,
+.rp-code-copy:focus-visible {
+  border-color: var(--rp-accent);
+  background: color-mix(in srgb, var(--rp-code-bg) 64%, var(--rp-accent));
+  color: var(--rp-code-text);
+}
+.rp-code-copy:focus-visible {
+  outline: 2px solid var(--rp-accent);
+  outline-offset: 2px;
+}
+.rp-code-copy:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+.rp-code-copy[data-rp-copied="true"] {
+  border-color: var(--rp-accent);
+  background: var(--rp-accent-soft);
+  color: var(--rp-accent);
+}
+.rp-code-copy[data-rp-copied="true"] .rp-code-copy-icon {
+  display: none;
+}
+.rp-code-copy[data-rp-copied="true"] .rp-code-copy-check {
+  display: block;
+}
 .rp-code pre {
   margin: 0;
+  padding-right: 56px;
   border-radius: 0;
   box-shadow: none;
 }
@@ -1223,6 +1281,69 @@ const menu = document.querySelector("[data-rp-menu]");
 const sidebar = document.querySelector("[data-rp-sidebar]");
 if (menu && sidebar) {{
   menu.addEventListener("click", () => sidebar.classList.toggle("is-open"));
+}}
+
+const codeCopyButtons = Array.from(document.querySelectorAll("[data-rp-copy-code]"));
+for (const button of codeCopyButtons) {{
+  button.addEventListener("click", async () => {{
+    const codeBlock = button.closest(".rp-code");
+    const codeContent = codeBlock ? codeBlock.querySelector(".rp-code-content") : null;
+    if (!codeContent) return;
+    try {{
+      await copyCodeText(codeContent.textContent || "");
+      showCodeCopied(button);
+    }} catch (error) {{
+      console.warn("RustPress copy code failed", error);
+    }}
+  }});
+}}
+
+async function copyCodeText(text) {{
+  if (window.navigator && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {{
+    try {{
+      await navigator.clipboard.writeText(text);
+      return;
+    }} catch (error) {{
+      fallbackCopyText(text);
+      return;
+    }}
+  }}
+  fallbackCopyText(text);
+}}
+
+function fallbackCopyText(text) {{
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-1000px";
+  textarea.style.left = "-1000px";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+  let copied = false;
+  try {{
+    copied = typeof document.execCommand === "function" && document.execCommand("copy");
+  }} finally {{
+    textarea.remove();
+  }}
+  if (!copied) throw new Error("copy command failed");
+}}
+
+function showCodeCopied(button) {{
+  button.dataset.rpCopied = "true";
+  button.disabled = true;
+  button.setAttribute("aria-label", "Copied");
+  button.setAttribute("title", "Copied");
+  window.clearTimeout(button.rpCopyReset);
+  button.rpCopyReset = window.setTimeout(() => {{
+    delete button.dataset.rpCopied;
+    button.disabled = false;
+    button.setAttribute("aria-label", "Copy code");
+    button.setAttribute("title", "Copy code");
+  }}, 1500);
 }}
 
 const mask = document.querySelector("[data-rp-access-mask]");
@@ -1495,6 +1616,23 @@ mod tests {
         assert!(styles.contains(".rp-doc pre.mermaid svg"));
         assert!(styles.contains(".rp-github-link svg"));
         assert!(styles.contains("max-width: 100%;"));
+    }
+
+    #[test]
+    fn css_and_js_include_code_copy_support() {
+        let styles = css();
+        assert!(styles.contains(".rp-code-copy"));
+        assert!(styles.contains(".rp-code-copy[data-rp-copied=\"true\"]"));
+        assert!(styles.contains(".rp-code-copy:disabled"));
+        assert!(styles.contains("padding-right: 56px;"));
+
+        let script = js(&site());
+        assert!(script.contains("[data-rp-copy-code]"));
+        assert!(script.contains(".rp-code-content"));
+        assert!(script.contains("navigator.clipboard.writeText"));
+        assert!(script.contains("fallbackCopyText"));
+        assert!(script.contains("document.execCommand(\"copy\")"));
+        assert!(script.contains("1500"));
     }
 
     #[test]

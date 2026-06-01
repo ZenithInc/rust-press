@@ -9,7 +9,7 @@ PORT="${PORT:-5177}"
 cd "$ROOT_DIR"
 
 echo "Starting RustPress docs at http://$HOST:$PORT/"
-exec cargo run -p rustpress-cli -- dev \
+exec cargo run -p rust-press -- dev \
   --config "$CONFIG" \
   --host "$HOST" \
   --port "$PORT"

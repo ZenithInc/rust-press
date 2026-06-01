@@ -4,8 +4,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/rustpress-theme"
+description = "Default static documentation theme for RustPress"
+readme = "../../README.md"
+keywords = ["docs", "theme", "static-site", "markdown"]
+categories = ["web-programming"]
 rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-rustpress-md = { path = "../rustpress-md" }
+rustpress-md = { version = "0.1.1", path = "../rustpress-md" }
