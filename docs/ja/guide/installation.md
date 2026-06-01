@@ -35,7 +35,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 特定のリリースタグをインストールする場合は、実在する tag に置き換えてください。
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.1 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.2 rust-press
 ```
 
 ## crates.io

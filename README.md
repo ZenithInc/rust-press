@@ -181,7 +181,7 @@ cargo publish -p rust-press
 ```
 
 Before publishing, run `cargo test` and then `cargo publish --dry-run -p <crate>`
-in the same order. Pushing a tag such as `v0.1.1` builds GitHub Releases
+in the same order. Pushing a tag such as `v0.1.2` builds GitHub Releases
 archives for Linux, macOS, and Windows.
 
 ## License

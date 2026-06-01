@@ -35,7 +35,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 Install a specific release tag by replacing the example version with a tag that exists:
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.1 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.2 rust-press
 ```
 
 ## crates.io

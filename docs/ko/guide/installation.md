@@ -35,7 +35,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 특정 릴리스 태그를 설치하려면 실제 존재하는 tag로 바꾸세요.
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.1 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.2 rust-press
 ```
 
 ## crates.io

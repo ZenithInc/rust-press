@@ -35,7 +35,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 安装指定发布标签时，把示例版本替换为实际存在的 tag：
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.1 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.2 rust-press
 ```
 
 ## crates.io
