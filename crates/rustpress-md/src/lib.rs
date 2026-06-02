@@ -286,21 +286,22 @@ fn render_code_block(
 }
 
 fn trim_trailing_blank_lines(code: &str) -> &str {
-    let mut end = code.len();
+    let Some((last_non_whitespace, ch)) = code.char_indices().rfind(|(_, ch)| !ch.is_whitespace())
+    else {
+        return "";
+    };
+    let last_non_whitespace_end = last_non_whitespace + ch.len_utf8();
+    let trailing = &code[last_non_whitespace_end..];
+    let line_break = match (trailing.find('\n'), trailing.find('\r')) {
+        (Some(newline), Some(carriage_return)) => Some(newline.min(carriage_return)),
+        (Some(newline), None) => Some(newline),
+        (None, Some(carriage_return)) => Some(carriage_return),
+        (None, None) => None,
+    };
 
-    for line in LinesWithEndings::from(code)
-        .collect::<Vec<_>>()
-        .into_iter()
-        .rev()
-    {
-        if line.trim().is_empty() {
-            end -= line.len();
-        } else {
-            break;
-        }
-    }
-
-    &code[..end]
+    line_break
+        .map(|line_break| &code[..last_non_whitespace_end + line_break])
+        .unwrap_or(code)
 }
 
 fn normalize_code_lang(lang: &str) -> &str {
@@ -535,7 +536,7 @@ mod tests {
         assert!(
             multiline.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1\n2</span>")
         );
-        assert!(multiline.contains("<code class=\"rp-code-content\">one\ntwo\n</code>"));
+        assert!(multiline.contains("<code class=\"rp-code-content\">one\ntwo</code>"));
 
         let empty = render_code_block("", None, false, true);
         assert!(empty.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1</span>"));
@@ -546,7 +547,15 @@ mod tests {
         let html = render_code_block("one\n  \n\t\n", None, false, true);
 
         assert!(html.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1</span>"));
-        assert!(html.contains("<code class=\"rp-code-content\">one\n</code>"));
+        assert!(html.contains("<code class=\"rp-code-content\">one</code>"));
+    }
+
+    #[test]
+    fn code_block_preserves_trailing_spaces_on_last_content_line() {
+        let html = render_code_block("one  \n\n", None, false, true);
+
+        assert!(html.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1</span>"));
+        assert!(html.contains("<code class=\"rp-code-content\">one  </code>"));
     }
 
     #[test]
@@ -563,7 +572,7 @@ mod tests {
         assert!(doc
             .html
             .contains("class=\"rp-code-lines\" aria-hidden=\"true\">1\n2</span>"));
-        assert_eq!(code_content(&doc.html), "alpha\nbeta\n");
+        assert_eq!(code_content(&doc.html), "alpha\nbeta");
     }
 
     #[test]
