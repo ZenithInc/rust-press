@@ -1019,6 +1019,27 @@ a:hover { text-decoration: underline; }
   display: block;
   min-width: max-content;
 }
+.rp-code-line-numbers pre {
+  display: grid;
+  grid-template-columns: minmax(42px, auto) minmax(0, max-content);
+  align-items: start;
+  padding-left: 0;
+}
+.rp-code-lines {
+  display: block;
+  min-width: 42px;
+  padding: 0 12px 0 16px;
+  border-right: 1px solid rgb(255 255 255 / 12%);
+  color: rgb(237 247 246 / 42%);
+  font: inherit;
+  line-height: inherit;
+  text-align: right;
+  user-select: none;
+  white-space: pre;
+}
+.rp-code-line-numbers .rp-code-content {
+  padding-left: 16px;
+}
 .rp-doc pre.mermaid {
   background: var(--rp-mermaid-bg);
   color: var(--rp-mermaid-text);
@@ -1625,6 +1646,13 @@ mod tests {
         assert!(styles.contains(".rp-code-copy[data-rp-copied=\"true\"]"));
         assert!(styles.contains(".rp-code-copy:disabled"));
         assert!(styles.contains("padding-right: 56px;"));
+        assert!(styles.contains(".rp-code-line-numbers pre"));
+        assert!(
+            styles.contains("grid-template-columns: minmax(42px, auto) minmax(0, max-content);")
+        );
+        assert!(styles.contains(".rp-code-lines"));
+        assert!(styles.contains("user-select: none;"));
+        assert!(styles.contains(".rp-code-line-numbers .rp-code-content"));
 
         let script = js(&site());
         assert!(script.contains("[data-rp-copy-code]"));

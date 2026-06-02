@@ -102,6 +102,7 @@ github_url = "https://github.com/your-org/your-repo"
 [markdown]
 mermaid = true
 code_highlight = true
+code_line_numbers = true
 heading_anchors = true
 
 [search]
@@ -181,7 +182,7 @@ cargo publish -p rust-press
 ```
 
 Before publishing, run `cargo test` and then `cargo publish --dry-run -p <crate>`
-in the same order. Pushing a tag such as `v0.1.2` builds GitHub Releases
+in the same order. Pushing a tag such as `v0.1.3` builds GitHub Releases
 archives for Linux, macOS, and Windows.
 
 ## License

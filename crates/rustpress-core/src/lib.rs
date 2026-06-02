@@ -62,6 +62,7 @@ pub struct ThemeSection {
 pub struct MarkdownSection {
     pub mermaid: bool,
     pub code_highlight: bool,
+    pub code_line_numbers: bool,
     pub heading_anchors: bool,
 }
 
@@ -140,6 +141,7 @@ impl Default for MarkdownSection {
         Self {
             mermaid: true,
             code_highlight: true,
+            code_line_numbers: true,
             heading_anchors: true,
         }
     }
@@ -303,6 +305,7 @@ github_url = ""
 [markdown]
 mermaid = true
 code_highlight = true
+code_line_numbers = true
 heading_anchors = true
 
 [search]
@@ -465,6 +468,7 @@ fn read_pages(src_dir: &Path, config: &Config) -> Result<Vec<Page>> {
             MarkdownOptions {
                 mermaid: config.markdown.mermaid,
                 code_highlight: config.markdown.code_highlight,
+                code_line_numbers: config.markdown.code_line_numbers,
                 heading_anchors: config.markdown.heading_anchors,
                 index_code: config.search.index_code,
             },
@@ -1121,6 +1125,53 @@ mod tests {
         assert!(!public_html.contains("data-rp-access-mask"));
         assert!(masked_html.contains("data-rp-access-mask"));
         assert!(theme_js.contains(r#"const accessPassword = "rustpress";"#));
+    }
+
+    #[test]
+    fn markdown_code_line_numbers_default_to_true() {
+        let raw = r#"
+title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[markdown]
+mermaid = true
+"#;
+        let config: Config = toml::from_str(raw).unwrap();
+
+        assert!(config.markdown.code_line_numbers);
+    }
+
+    #[test]
+    fn markdown_code_line_numbers_false_reaches_rendered_pages() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("docs")).unwrap();
+        fs::write(
+            dir.path().join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[markdown]
+code_highlight = false
+code_line_numbers = false
+"#,
+        )
+        .unwrap();
+        fs::write(
+            dir.path().join("docs/index.md"),
+            "# Home\n\n```rust\nfn main() {}\n```",
+        )
+        .unwrap();
+
+        build_site(BuildOptions::new(dir.path().join("rustpress.toml"))).unwrap();
+
+        let html = fs::read_to_string(dir.path().join("dist/index.html")).unwrap();
+        assert!(html.contains("class=\"rp-code-content language-rust\""));
+        assert!(!html.contains("rp-code-line-numbers"));
+        assert!(!html.contains("rp-code-lines"));
     }
 
     #[test]

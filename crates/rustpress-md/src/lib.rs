@@ -17,6 +17,7 @@ use syntect::util::LinesWithEndings;
 pub struct MarkdownOptions {
     pub mermaid: bool,
     pub code_highlight: bool,
+    pub code_line_numbers: bool,
     pub heading_anchors: bool,
     pub index_code: bool,
 }
@@ -26,6 +27,7 @@ impl Default for MarkdownOptions {
         Self {
             mermaid: true,
             code_highlight: true,
+            code_line_numbers: true,
             heading_anchors: true,
             index_code: false,
         }
@@ -224,6 +226,7 @@ fn render_html(events: Vec<Event<'_>>, headings: &[Heading], options: &MarkdownO
                         &code_text,
                         code_lang.as_deref(),
                         options.code_highlight,
+                        options.code_line_numbers,
                     ))));
                     code_text.clear();
                 }
@@ -239,7 +242,12 @@ fn render_html(events: Vec<Event<'_>>, headings: &[Heading], options: &MarkdownO
     rendered
 }
 
-fn render_code_block(code: &str, lang: Option<&str>, highlight: bool) -> String {
+fn render_code_block(
+    code: &str,
+    lang: Option<&str>,
+    highlight: bool,
+    code_line_numbers: bool,
+) -> String {
     let normalized_lang = lang
         .map(normalize_code_lang)
         .filter(|lang| !lang.is_empty());
@@ -259,6 +267,17 @@ fn render_code_block(code: &str, lang: Option<&str>, highlight: bool) -> String 
             )
         })
         .unwrap_or_default();
+
+    if code_line_numbers {
+        let line_count = LinesWithEndings::from(code).count().max(1);
+        let lines = (1..=line_count)
+            .map(|line| line.to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        return format!(
+            r#"<div class="rp-code rp-code-line-numbers">{header}<button class="rp-code-copy" type="button" data-rp-copy-code aria-label="Copy code" title="Copy code"><svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button><pre><span class="rp-code-lines" aria-hidden="true">{lines}</span><code class="rp-code-content{lang_class}">{content}</code></pre></div>"#
+        );
+    }
 
     format!(
         r#"<div class="rp-code">{header}<button class="rp-code-copy" type="button" data-rp-copy-code aria-label="Copy code" title="Copy code"><svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button><pre><code class="rp-code-content{lang_class}">{content}</code></pre></div>"#
@@ -431,6 +450,8 @@ mod tests {
         assert!(doc.html.contains("<pre class=\"mermaid\">"));
         assert!(doc.html.contains("A--&gt;B"));
         assert!(!doc.html.contains("data-rp-copy-code"));
+        assert!(!doc.html.contains("rp-code-line-numbers"));
+        assert!(!doc.html.contains("rp-code-lines"));
     }
 
     #[test]
@@ -441,13 +462,34 @@ mod tests {
         )
         .unwrap();
 
-        assert!(doc.html.contains("class=\"rp-code\""));
+        assert!(doc.html.contains("class=\"rp-code rp-code-line-numbers\""));
         assert!(doc.html.contains("class=\"rp-code-copy\""));
         assert!(doc.html.contains("data-rp-copy-code"));
         assert!(doc.html.contains("aria-label=\"Copy code\""));
+        assert!(doc.html.contains("rp-code-line-numbers"));
+        assert!(doc
+            .html
+            .contains("class=\"rp-code-lines\" aria-hidden=\"true\""));
         assert!(doc.html.contains("language-rust"));
         assert!(doc.html.contains("<span style="));
         assert!(doc.html.contains("println"));
+    }
+
+    #[test]
+    fn code_line_numbers_can_be_disabled() {
+        let doc = parse_markdown(
+            "```rust\nfn main() { println!(\"hi\"); }\n```",
+            MarkdownOptions {
+                code_line_numbers: false,
+                ..MarkdownOptions::default()
+            },
+        )
+        .unwrap();
+
+        assert!(doc.html.contains("class=\"rp-code\""));
+        assert!(doc.html.contains("data-rp-copy-code"));
+        assert!(!doc.html.contains("rp-code-line-numbers"));
+        assert!(!doc.html.contains("rp-code-lines"));
     }
 
     #[test]
@@ -461,11 +503,39 @@ mod tests {
         )
         .unwrap();
 
-        assert!(doc.html.contains("class=\"rp-code\""));
+        assert!(doc.html.contains("class=\"rp-code rp-code-line-numbers\""));
         assert!(doc.html.contains("data-rp-copy-code"));
         assert!(doc.html.contains("class=\"rp-code-content language-rust\""));
         assert!(doc.html.contains("println!(\"&lt;hi&gt;\")"));
         assert!(!doc.html.contains("<span style="));
+    }
+
+    #[test]
+    fn code_line_numbers_match_multiline_trailing_and_empty_blocks() {
+        let multiline = render_code_block("one\ntwo\n\n", None, false, true);
+        assert!(
+            multiline.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1\n2\n3</span>")
+        );
+
+        let empty = render_code_block("", None, false, true);
+        assert!(empty.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1</span>"));
+    }
+
+    #[test]
+    fn code_content_does_not_include_line_numbers() {
+        let doc = parse_markdown(
+            "```\nalpha\nbeta\n```",
+            MarkdownOptions {
+                code_highlight: false,
+                ..MarkdownOptions::default()
+            },
+        )
+        .unwrap();
+
+        assert!(doc
+            .html
+            .contains("class=\"rp-code-lines\" aria-hidden=\"true\">1\n2</span>"));
+        assert_eq!(code_content(&doc.html), "alpha\nbeta\n");
     }
 
     #[test]
@@ -478,5 +548,12 @@ mod tests {
 
         assert!(doc.search_text.contains("Body"));
         assert!(!doc.search_text.contains("hidden"));
+    }
+
+    fn code_content(html: &str) -> &str {
+        let class_start = html.find("class=\"rp-code-content").unwrap();
+        let content_start = class_start + html[class_start..].find('>').unwrap() + 1;
+        let content_end = content_start + html[content_start..].find("</code>").unwrap();
+        &html[content_start..content_end]
     }
 }

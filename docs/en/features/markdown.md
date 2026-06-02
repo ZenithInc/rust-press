@@ -14,6 +14,10 @@ Markdown is parsed by `pulldown-cmark`. The MVP enables tables, task lists, stri
 
 Every heading receives a stable anchor. Non-ASCII headings are preserved, so a heading like `中文 标题` becomes `#中文-标题`.
 
+## Code Blocks
+
+Regular fenced code blocks show line numbers by default. Set `code_line_numbers = false` in `rustpress.toml` to disable them; the copy button copies only the code content.
+
 ## Mermaid
 
 Fenced code blocks with the `mermaid` language are emitted as Mermaid blocks and rendered by a client-side Mermaid script.

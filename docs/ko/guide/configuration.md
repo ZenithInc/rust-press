@@ -39,6 +39,7 @@ github_url = "https://github.com/your-org/your-repo"
 [markdown]
 mermaid = true
 code_highlight = true
+code_line_numbers = true
 heading_anchors = true
 
 [search]
