@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Release"
+  short_description: "Release RustPress through CI, Pages, and crates.io."
+  default_prompt: "发布"
