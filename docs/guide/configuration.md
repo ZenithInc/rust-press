@@ -114,7 +114,7 @@ link = "/internals/crates/"
 
 `top_nav.items` 只控制顶部下拉菜单。省略 `items` 时，该项会渲染为直接的顶层链接。
 
-`sidebars.<name>.items` 控制左侧侧边栏。在顶部导航项上添加 `sidebar = "name"` 可以把该顶部分区绑定到 `sidebars.name`；它不会把 `top_nav.items` 复用成侧边栏条目。
+`sidebars.<name>.items` 控制左侧侧边栏。在顶部导航项上添加 `sidebar = "name"` 可以把该顶部分区绑定到 `sidebars.name`；它不会把 `top_nav.items` 复用成侧边栏条目。只出现在 `top_nav.items`、没有出现在 `sidebars.<name>.items` 的页面，不会被加入左侧侧边栏。
 
 ## 多语言文档
 

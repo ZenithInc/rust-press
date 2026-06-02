@@ -114,7 +114,7 @@ link = "/internals/crates/"
 
 `top_nav.items`는 상단 드롭다운 메뉴만 제어합니다. `items`가 없으면 해당 항목은 직접적인 상위 링크로 렌더링됩니다.
 
-`sidebars.<name>.items`는 왼쪽 사이드바를 제어합니다. 상단 내비게이션 항목에 `sidebar = "name"`을 추가하면 해당 상위 섹션을 `sidebars.name`에 연결합니다. `top_nav.items`가 사이드바 항목으로 재사용되지는 않습니다.
+`sidebars.<name>.items`는 왼쪽 사이드바를 제어합니다. 상단 내비게이션 항목에 `sidebar = "name"`을 추가하면 해당 상위 섹션을 `sidebars.name`에 연결합니다. `top_nav.items`가 사이드바 항목으로 재사용되지는 않습니다. `top_nav.items`에만 있고 `sidebars.<name>.items`에는 없는 페이지는 왼쪽 사이드바에 추가되지 않습니다.
 
 ## 다국어 문서
 

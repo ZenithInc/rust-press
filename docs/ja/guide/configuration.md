@@ -114,7 +114,7 @@ link = "/internals/crates/"
 
 `top_nav.items` はトップのドロップダウンメニューだけを制御します。`items` が省略された場合、その項目は直接のトップレベルリンクとしてレンダリングされます。
 
-`sidebars.<name>.items` は左側サイドバーを制御します。トップナビゲーション項目に `sidebar = "name"` を追加すると、そのトップレベルセクションを `sidebars.name` に紐づけます。`top_nav.items` がサイドバー項目として再利用されることはありません。
+`sidebars.<name>.items` は左側サイドバーを制御します。トップナビゲーション項目に `sidebar = "name"` を追加すると、そのトップレベルセクションを `sidebars.name` に紐づけます。`top_nav.items` がサイドバー項目として再利用されることはありません。`top_nav.items` にのみあり、`sidebars.<name>.items` にないページは左側サイドバーには追加されません。
 
 ## 多言語ドキュメント
 

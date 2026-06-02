@@ -114,7 +114,7 @@ link = "/internals/crates/"
 
 `top_nav.items` only controls the top dropdown menu. When `items` are omitted, the item renders as a direct top-level link.
 
-`sidebars.<name>.items` controls the left sidebar. Add `sidebar = "name"` to a top navigation item to bind that top-level section to `sidebars.name`; it does not reuse `top_nav.items` as sidebar entries.
+`sidebars.<name>.items` controls the left sidebar. Add `sidebar = "name"` to a top navigation item to bind that top-level section to `sidebars.name`; it does not reuse `top_nav.items` as sidebar entries. A page that appears only in `top_nav.items` and not in `sidebars.<name>.items` will not be added to the left sidebar.
 
 ## Multilingual Docs
 

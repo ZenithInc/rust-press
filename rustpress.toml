@@ -9,16 +9,12 @@ link = "/guide/cli/"
 sidebar = "guide"
 
 [[top_nav.items]]
-text = "安装"
+text = "快速开始"
 link = "/guide/installation/"
 
 [[top_nav.items]]
-text = "配置"
+text = "站点配置"
 link = "/guide/configuration/"
-
-[[top_nav.items]]
-text = "Markdown 教程"
-link = "/guide/markdown-tutorial/"
 
 [[top_nav]]
 text = "功能"
@@ -26,16 +22,12 @@ link = "/features/markdown/"
 sidebar = "features"
 
 [[top_nav.items]]
-text = "Markdown"
+text = "Markdown 能力"
 link = "/features/markdown/"
 
 [[top_nav.items]]
-text = "主题"
+text = "主题外观"
 link = "/features/theme/"
-
-[[top_nav.items]]
-text = "搜索"
-link = "/features/search/"
 
 [[top_nav]]
 text = "参考"
@@ -111,16 +103,12 @@ link = "guide/cli/"
 sidebar = "guide"
 
 [[locales.en.top_nav.items]]
-text = "Installation"
+text = "Quick Start"
 link = "guide/installation/"
 
 [[locales.en.top_nav.items]]
-text = "Configuration"
+text = "Site Config"
 link = "guide/configuration/"
-
-[[locales.en.top_nav.items]]
-text = "Markdown Tutorial"
-link = "guide/markdown-tutorial/"
 
 [[locales.en.top_nav]]
 text = "Features"
@@ -128,16 +116,12 @@ link = "features/markdown/"
 sidebar = "features"
 
 [[locales.en.top_nav.items]]
-text = "Markdown"
+text = "Markdown Features"
 link = "features/markdown/"
 
 [[locales.en.top_nav.items]]
-text = "Theme"
+text = "Theme UI"
 link = "features/theme/"
-
-[[locales.en.top_nav.items]]
-text = "Search"
-link = "features/search/"
 
 [[locales.en.top_nav]]
 text = "Reference"
@@ -208,16 +192,12 @@ link = "guide/cli/"
 sidebar = "guide"
 
 [[locales.ja.top_nav.items]]
-text = "インストール"
+text = "クイックスタート"
 link = "guide/installation/"
 
 [[locales.ja.top_nav.items]]
-text = "設定"
+text = "サイト設定"
 link = "guide/configuration/"
-
-[[locales.ja.top_nav.items]]
-text = "Markdown チュートリアル"
-link = "guide/markdown-tutorial/"
 
 [[locales.ja.top_nav]]
 text = "機能"
@@ -225,16 +205,12 @@ link = "features/markdown/"
 sidebar = "features"
 
 [[locales.ja.top_nav.items]]
-text = "Markdown"
+text = "Markdown 機能"
 link = "features/markdown/"
 
 [[locales.ja.top_nav.items]]
-text = "テーマ"
+text = "テーマ UI"
 link = "features/theme/"
-
-[[locales.ja.top_nav.items]]
-text = "検索"
-link = "features/search/"
 
 [[locales.ja.top_nav]]
 text = "リファレンス"
@@ -305,16 +281,12 @@ link = "guide/cli/"
 sidebar = "guide"
 
 [[locales.ko.top_nav.items]]
-text = "설치"
+text = "빠른 시작"
 link = "guide/installation/"
 
 [[locales.ko.top_nav.items]]
-text = "설정"
+text = "사이트 설정"
 link = "guide/configuration/"
-
-[[locales.ko.top_nav.items]]
-text = "Markdown 튜토리얼"
-link = "guide/markdown-tutorial/"
 
 [[locales.ko.top_nav]]
 text = "기능"
@@ -322,16 +294,12 @@ link = "features/markdown/"
 sidebar = "features"
 
 [[locales.ko.top_nav.items]]
-text = "Markdown"
+text = "Markdown 기능"
 link = "features/markdown/"
 
 [[locales.ko.top_nav.items]]
-text = "테마"
+text = "테마 UI"
 link = "features/theme/"
-
-[[locales.ko.top_nav.items]]
-text = "검색"
-link = "features/search/"
 
 [[locales.ko.top_nav]]
 text = "참조"

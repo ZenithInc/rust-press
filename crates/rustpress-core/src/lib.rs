@@ -671,14 +671,18 @@ fn active_sidebar_id<'a>(
     sidebars: &'a BTreeMap<String, Vec<SidebarSection>>,
     route: &str,
 ) -> Option<&'a str> {
+    if let Some((sidebar, _)) = sidebars
+        .iter()
+        .find(|(_, sections)| sidebar_sections_match_route(sections, route))
+    {
+        return Some(sidebar.as_str());
+    }
+
     top_nav
         .iter()
         .filter_map(|item| item.sidebar.as_deref().map(|sidebar| (item, sidebar)))
         .find_map(|(item, sidebar)| {
-            let sections = sidebars.get(sidebar)?;
-            if top_nav_section_matches_route(item, route)
-                || sidebar_sections_match_route(sections, route)
-            {
+            if sidebars.contains_key(sidebar) && top_nav_link_matches_route(item, route) {
                 Some(sidebar)
             } else {
                 None
@@ -686,14 +690,10 @@ fn active_sidebar_id<'a>(
         })
 }
 
-fn top_nav_section_matches_route(item: &TopNavSection, route: &str) -> bool {
+fn top_nav_link_matches_route(item: &TopNavSection, route: &str) -> bool {
     item.link
         .as_deref()
         .is_some_and(|href| route_matches_link(route, href))
-        || item
-            .items
-            .iter()
-            .any(|child| route_matches_link(route, &child.link))
 }
 
 fn sidebar_sections_match_route(items: &[SidebarSection], route: &str) -> bool {
@@ -1692,7 +1692,7 @@ link = "guide/"
     }
 
     #[test]
-    fn explicit_sidebars_are_selected_by_top_nav_section() {
+    fn explicit_sidebars_ignore_top_nav_dropdown_items() {
         let dir = tempfile::tempdir().unwrap();
         fs::create_dir_all(dir.path().join("docs")).unwrap();
         fs::write(
@@ -1704,7 +1704,7 @@ base = "/"
 
 [[top_nav]]
 text = "Guide"
-link = "/guide/"
+link = "/guide/cli/"
 sidebar = "guide"
 
 [[top_nav.items]]
@@ -1722,7 +1722,7 @@ link = "/reference/"
 
 [[sidebars.guide]]
 text = "Guide"
-link = "/guide/"
+link = "/guide/cli/"
 
 [[sidebars.guide.items]]
 text = "CLI"
@@ -1787,9 +1787,9 @@ link = "/reference/api/"
         ));
         assert!(!guide_html
             .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/reference/api/">API</a>"#));
-        assert!(quick_start_html
+        assert!(!quick_start_html
             .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/cli/">CLI</a>"#));
-        assert!(quick_start_html.contains(
+        assert!(!quick_start_html.contains(
             r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/configuration/">Configuration</a>"#
         ));
         assert!(reference_html.contains("API"));
