@@ -68,7 +68,7 @@ access: public
 
 `access` can be `public` or `masked`. Masked pages show the access overlay only when `[access].password` is configured. `search: false` excludes the page from the generated search index.
 
-## Top Navigation
+## Top Navigation and Sidebars
 
 Use `[[nav]]` to render top navigation links or grouped menus.
 
@@ -76,6 +76,7 @@ Use `[[nav]]` to render top navigation links or grouped menus.
 [[nav]]
 text = "Guide"
 link = "/guide/cli/"
+sidebar = "guide"
 
 [[nav.items]]
 text = "CLI"
@@ -88,9 +89,32 @@ link = "/guide/configuration/"
 [[nav]]
 text = "Reference"
 link = "/internals/crates/"
+sidebar = "reference"
+
+[[sidebars.guide]]
+text = "Guide"
+link = "/guide/cli/"
+
+[[sidebars.guide.items]]
+text = "CLI"
+link = "/guide/cli/"
+
+[[sidebars.guide.items]]
+text = "Configuration"
+link = "/guide/configuration/"
+
+[[sidebars.reference]]
+text = "Reference"
+link = "/internals/crates/"
+
+[[sidebars.reference.items]]
+text = "Crates"
+link = "/internals/crates/"
 ```
 
 When `items` are present, the theme renders a dropdown menu. When `items` are omitted, the item renders as a direct top-level link.
+
+Add `sidebar = "name"` to a top navigation item to bind pages in that section to `sidebars.name`. If no `sidebars` are configured, RustPress keeps the legacy behavior and builds the sidebar from Markdown pages plus `nav` ordering.
 
 ## Multilingual Docs
 
@@ -119,6 +143,15 @@ link = "/ko/"
 [[locales.en.nav]]
 text = "Guide"
 link = "guide/cli/"
+sidebar = "guide"
+
+[[locales.en.sidebars.guide]]
+text = "Guide"
+link = "guide/cli/"
+
+[[locales.en.sidebars.guide.items]]
+text = "CLI"
+link = "guide/cli/"
 ```
 
 The root language keeps using files directly under `docs/`. Other locale files live in `docs/<locale>/`.
@@ -132,6 +165,6 @@ docs/ja/index.md           -> /ja/
 docs/ko/index.md           -> /ko/
 ```
 
-Non-root locale links default to `/<locale>/`; use `link` to override that prefix. Locale `nav` and `title` override the global values, and fall back to global config when omitted. Relative locale nav links are resolved under that locale prefix, so `guide/cli/` in `locales.en.nav` becomes `/en/guide/cli/`.
+Non-root locale links default to `/<locale>/`; use `link` to override that prefix. Locale `nav`, `sidebars`, and `title` override the global values, and fall back to global config when omitted. Relative locale nav and sidebar links are resolved under that locale prefix, so `guide/cli/` in `locales.en.nav` or `locales.en.sidebars.guide` becomes `/en/guide/cli/`.
 
 The language selector appears in the top bar only when `locales` is configured. It switches to the matching translated page when one exists. If a translation is missing, it links to that language's home page.

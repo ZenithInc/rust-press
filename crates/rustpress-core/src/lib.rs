@@ -45,6 +45,7 @@ pub struct Config {
     pub search: SearchSection,
     pub access: AccessSection,
     pub nav: Vec<NavSection>,
+    pub sidebars: BTreeMap<String, Vec<SidebarSection>>,
     pub locales: BTreeMap<String, LocaleSection>,
 }
 
@@ -88,6 +89,7 @@ pub struct AccessSection {
 pub struct NavSection {
     pub text: String,
     pub link: Option<String>,
+    pub sidebar: Option<String>,
     pub items: Vec<NavLinkSection>,
 }
 
@@ -100,12 +102,28 @@ pub struct NavLinkSection {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+pub struct SidebarSection {
+    pub text: String,
+    pub link: String,
+    pub items: Vec<SidebarLinkSection>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SidebarLinkSection {
+    pub text: String,
+    pub link: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct LocaleSection {
     pub label: String,
     pub lang: String,
     pub link: String,
     pub title: Option<String>,
     pub nav: Vec<NavSection>,
+    pub sidebars: BTreeMap<String, Vec<SidebarSection>>,
 }
 
 impl Default for Config {
@@ -120,6 +138,7 @@ impl Default for Config {
             search: SearchSection::default(),
             access: AccessSection::default(),
             nav: Vec::new(),
+            sidebars: BTreeMap::new(),
             locales: BTreeMap::new(),
         }
     }
@@ -173,6 +192,7 @@ impl Default for NavSection {
         Self {
             text: String::new(),
             link: None,
+            sidebar: None,
             items: Vec::new(),
         }
     }
@@ -195,6 +215,26 @@ impl Default for LocaleSection {
             link: String::new(),
             title: None,
             nav: Vec::new(),
+            sidebars: BTreeMap::new(),
+        }
+    }
+}
+
+impl Default for SidebarSection {
+    fn default() -> Self {
+        Self {
+            text: String::new(),
+            link: String::new(),
+            items: Vec::new(),
+        }
+    }
+}
+
+impl Default for SidebarLinkSection {
+    fn default() -> Self {
+        Self {
+            text: String::new(),
+            link: String::new(),
         }
     }
 }
@@ -223,6 +263,7 @@ impl Config {
         self.theme.github_url = self.theme.github_url.trim().to_string();
         self.access.password = self.access.password.trim().to_string();
         normalize_nav(&mut self.nav, None);
+        normalize_sidebars(&mut self.sidebars, None);
 
         if !self.locales.is_empty() {
             if !self.locales.contains_key("root") {
@@ -262,6 +303,7 @@ impl Config {
             for locale in self.locales.values_mut() {
                 let locale_prefix = locale.link.clone();
                 normalize_nav(&mut locale.nav, Some(&locale_prefix));
+                normalize_sidebars(&mut locale.sidebars, Some(&locale_prefix));
             }
         }
         Ok(())
@@ -287,12 +329,25 @@ base = "/"
 [[nav]]
 text = "Guide"
 link = "/"
+sidebar = "guide"
 
 [[nav.items]]
 text = "Home"
 link = "/"
 
 [[nav.items]]
+text = "Masked Page"
+link = "/private/"
+
+[[sidebars.guide]]
+text = "Guide"
+link = "/"
+
+[[sidebars.guide.items]]
+text = "Home"
+link = "/"
+
+[[sidebars.guide.items]]
 text = "Masked Page"
 link = "/private/"
 
@@ -485,7 +540,15 @@ fn read_pages(src_dir: &Path, config: &Config) -> Result<Vec<Page>> {
     Ok(pages)
 }
 
-fn build_nav(pages: &[Page], config: &Config, locale_key: &str) -> Vec<NavItem> {
+fn build_nav(pages: &[Page], config: &Config, page: &Page) -> Vec<NavItem> {
+    if !sidebars_for_locale(config, &page.locale_key).is_empty() {
+        return build_explicit_nav(config, &page.locale_key, &page.route);
+    }
+
+    build_legacy_nav(pages, config, &page.locale_key)
+}
+
+fn build_legacy_nav(pages: &[Page], config: &Config, locale_key: &str) -> Vec<NavItem> {
     let locale_prefix = home_for_locale(config, locale_key);
     let group_meta =
         sidebar_group_meta(nav_sections_for_locale(config, locale_key), &locale_prefix);
@@ -561,6 +624,83 @@ fn build_nav(pages: &[Page], config: &Config, locale_key: &str) -> Vec<NavItem> 
     roots
 }
 
+fn build_explicit_nav(config: &Config, locale_key: &str, route: &str) -> Vec<NavItem> {
+    let nav = nav_sections_for_locale(config, locale_key);
+    let sidebars = sidebars_for_locale(config, locale_key);
+    let Some(sidebar_id) = active_sidebar_id(nav, sidebars, route) else {
+        return Vec::new();
+    };
+
+    sidebars
+        .get(sidebar_id)
+        .map(|sections| sidebar_sections_to_nav_items(sections))
+        .unwrap_or_default()
+}
+
+fn active_sidebar_id<'a>(
+    nav: &'a [NavSection],
+    sidebars: &'a BTreeMap<String, Vec<SidebarSection>>,
+    route: &str,
+) -> Option<&'a str> {
+    nav.iter()
+        .filter_map(|item| item.sidebar.as_deref().map(|sidebar| (item, sidebar)))
+        .find_map(|(item, sidebar)| {
+            let sections = sidebars.get(sidebar)?;
+            if nav_section_matches_route(item, route)
+                || sidebar_sections_match_route(sections, route)
+            {
+                Some(sidebar)
+            } else {
+                None
+            }
+        })
+}
+
+fn nav_section_matches_route(item: &NavSection, route: &str) -> bool {
+    item.link
+        .as_deref()
+        .is_some_and(|href| route_matches_link(route, href))
+        || item
+            .items
+            .iter()
+            .any(|child| route_matches_link(route, &child.link))
+}
+
+fn sidebar_sections_match_route(items: &[SidebarSection], route: &str) -> bool {
+    items.iter().any(|item| {
+        route_matches_link(route, &item.link)
+            || item
+                .items
+                .iter()
+                .any(|child| route_matches_link(route, &child.link))
+    })
+}
+
+fn sidebar_sections_to_nav_items(items: &[SidebarSection]) -> Vec<NavItem> {
+    items
+        .iter()
+        .map(|item| NavItem {
+            title: item.text.clone(),
+            href: item.link.clone(),
+            active_prefix: item.link.clone(),
+            items: item
+                .items
+                .iter()
+                .map(|child| NavItem {
+                    title: child.text.clone(),
+                    href: child.link.clone(),
+                    active_prefix: child.link.clone(),
+                    items: Vec::new(),
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+fn route_matches_link(route: &str, href: &str) -> bool {
+    href.starts_with('/') && (route == href || (href != "/" && route.starts_with(href)))
+}
+
 fn build_top_nav(config: &Config, locale_key: &str) -> Vec<TopNavItem> {
     nav_sections_for_locale(config, locale_key)
         .iter()
@@ -606,6 +746,18 @@ fn nav_sections_for_locale<'a>(config: &'a Config, locale_key: &str) -> &'a [Nav
         .filter(|locale| !locale.nav.is_empty())
         .map(|locale| locale.nav.as_slice())
         .unwrap_or(config.nav.as_slice())
+}
+
+fn sidebars_for_locale<'a>(
+    config: &'a Config,
+    locale_key: &str,
+) -> &'a BTreeMap<String, Vec<SidebarSection>> {
+    config
+        .locales
+        .get(locale_key)
+        .filter(|locale| !locale.sidebars.is_empty())
+        .map(|locale| &locale.sidebars)
+        .unwrap_or(&config.sidebars)
 }
 
 fn sidebar_group_meta(nav: &[NavSection], locale_prefix: &str) -> Vec<SidebarGroupMeta> {
@@ -689,7 +841,7 @@ fn site_render_for_page(
         access_password: config.access.password.clone(),
         password_hint: config.access.password_hint.clone(),
         top_nav: build_top_nav(config, &page.locale_key),
-        nav: build_nav(pages, config, &page.locale_key),
+        nav: build_nav(pages, config, page),
         languages: build_language_options(config, page, translations),
     }
 }
@@ -991,6 +1143,11 @@ fn normalize_nav(nav: &mut Vec<NavSection>, locale_prefix: Option<&str>) {
     nav.retain(|item| !item.text.trim().is_empty());
     for item in nav {
         item.text = item.text.trim().to_string();
+        item.sidebar = item
+            .sidebar
+            .take()
+            .map(|sidebar| sidebar.trim().to_string())
+            .filter(|sidebar| !sidebar.is_empty());
         if item
             .link
             .as_deref()
@@ -1008,6 +1165,40 @@ fn normalize_nav(nav: &mut Vec<NavSection>, locale_prefix: Option<&str>) {
             *link = normalize_nav_link(link, locale_prefix);
         }
     }
+}
+
+fn normalize_sidebars(
+    sidebars: &mut BTreeMap<String, Vec<SidebarSection>>,
+    locale_prefix: Option<&str>,
+) {
+    sidebars.retain(|id, items| {
+        if id.trim().is_empty() {
+            return false;
+        }
+
+        for item in items.iter_mut() {
+            item.text = item.text.trim().to_string();
+            item.items
+                .retain(|child| !child.text.trim().is_empty() && !child.link.trim().is_empty());
+            for child in &mut item.items {
+                child.text = child.text.trim().to_string();
+                child.link = normalize_nav_link(&child.link, locale_prefix);
+            }
+
+            item.link = item.link.trim().to_string();
+            if item.link.is_empty() {
+                if let Some(first_child) = item.items.first() {
+                    item.link = first_child.link.clone();
+                }
+            } else {
+                item.link = normalize_nav_link(&item.link, locale_prefix);
+            }
+        }
+
+        items.retain(|item| !item.text.is_empty() && !item.link.is_empty());
+
+        !items.is_empty()
+    });
 }
 
 fn normalize_nav_link(link: &str, locale_prefix: Option<&str>) -> String {
@@ -1261,6 +1452,7 @@ github_url = " https://github.com/example/docs "
             nav: vec![NavSection {
                 text: " Guide ".to_string(),
                 link: Some("guide/cli/".to_string()),
+                sidebar: None,
                 items: vec![
                     NavLinkSection {
                         text: " CLI ".to_string(),
@@ -1285,6 +1477,48 @@ github_url = " https://github.com/example/docs "
     }
 
     #[test]
+    fn sidebar_links_are_normalized() {
+        let mut sidebars = BTreeMap::new();
+        sidebars.insert(
+            "docs".to_string(),
+            vec![SidebarSection {
+                text: " Guide ".to_string(),
+                link: String::new(),
+                items: vec![
+                    SidebarLinkSection {
+                        text: " CLI ".to_string(),
+                        link: "guide/cli/".to_string(),
+                    },
+                    SidebarLinkSection {
+                        text: String::new(),
+                        link: "/bad/".to_string(),
+                    },
+                ],
+            }],
+        );
+        let mut config = Config {
+            nav: vec![NavSection {
+                text: "Guide".to_string(),
+                link: Some("/guide/".to_string()),
+                sidebar: Some(" docs ".to_string()),
+                items: Vec::new(),
+            }],
+            sidebars,
+            ..Config::default()
+        };
+
+        config.normalize().unwrap();
+
+        assert_eq!(config.nav[0].sidebar.as_deref(), Some("docs"));
+        let sidebar = &config.sidebars["docs"][0];
+        assert_eq!(sidebar.text, "Guide");
+        assert_eq!(sidebar.link, "/guide/cli/");
+        assert_eq!(sidebar.items.len(), 1);
+        assert_eq!(sidebar.items[0].text, "CLI");
+        assert_eq!(sidebar.items[0].link, "/guide/cli/");
+    }
+
+    #[test]
     fn locales_require_root() {
         let mut config = Config::default();
         config.locales.insert(
@@ -1304,6 +1538,19 @@ github_url = " https://github.com/example/docs "
     #[test]
     fn locale_links_and_relative_nav_are_normalized() {
         let mut config = localized_config();
+        let locale = config.locales.get_mut("en").unwrap();
+        locale.nav[0].sidebar = Some(" guide ".to_string());
+        locale.sidebars.insert(
+            "guide".to_string(),
+            vec![SidebarSection {
+                text: " Guide ".to_string(),
+                link: "guide/cli/".to_string(),
+                items: vec![SidebarLinkSection {
+                    text: "CLI".to_string(),
+                    link: "guide/cli/".to_string(),
+                }],
+            }],
+        );
 
         config.normalize().unwrap();
 
@@ -1314,7 +1561,69 @@ github_url = " https://github.com/example/docs "
         assert_eq!(root.link, "/");
         assert_eq!(en.link, "/en/");
         assert_eq!(en.nav[0].link.as_deref(), Some("/en/guide/cli/"));
+        assert_eq!(en.nav[0].sidebar.as_deref(), Some("guide"));
         assert_eq!(en.nav[0].items[0].link, "/en/guide/cli/");
+        assert_eq!(en.sidebars["guide"][0].link, "/en/guide/cli/");
+        assert_eq!(en.sidebars["guide"][0].items[0].link, "/en/guide/cli/");
+    }
+
+    #[test]
+    fn explicit_sidebars_are_selected_by_top_nav_section() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("docs")).unwrap();
+        fs::write(
+            dir.path().join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[[nav]]
+text = "Guide"
+link = "/guide/"
+sidebar = "guide"
+
+[[nav]]
+text = "Reference"
+link = "/reference/"
+sidebar = "reference"
+
+[[sidebars.guide]]
+text = "Guide"
+link = "/guide/"
+
+[[sidebars.guide.items]]
+text = "CLI"
+link = "/guide/cli/"
+
+[[sidebars.reference]]
+text = "Reference"
+link = "/reference/"
+
+[[sidebars.reference.items]]
+text = "API"
+link = "/reference/api/"
+"#,
+        )
+        .unwrap();
+        write_doc(dir.path(), "docs/guide/cli.md", "Guide CLI", "Guide CLI").unwrap();
+        write_doc(
+            dir.path(),
+            "docs/reference/api.md",
+            "Reference API",
+            "Reference API",
+        )
+        .unwrap();
+
+        build_site(BuildOptions::new(dir.path().join("rustpress.toml"))).unwrap();
+
+        let guide_html = fs::read_to_string(dir.path().join("dist/guide/cli/index.html")).unwrap();
+        let reference_html =
+            fs::read_to_string(dir.path().join("dist/reference/api/index.html")).unwrap();
+        assert!(guide_html.contains("CLI"));
+        assert!(!guide_html.contains("rp-nav-level-1\">API"));
+        assert!(reference_html.contains("API"));
+        assert!(!reference_html.contains("rp-nav-level-1\">CLI"));
     }
 
     #[test]
@@ -1474,6 +1783,7 @@ github_url = " https://github.com/example/docs "
                 nav: vec![NavSection {
                     text: "Guide".to_string(),
                     link: Some("guide/cli/".to_string()),
+                    sidebar: None,
                     items: vec![NavLinkSection {
                         text: "CLI".to_string(),
                         link: "guide/cli/".to_string(),
