@@ -180,6 +180,7 @@ fn content_type_header(path: &Path) -> Option<Header> {
         Some("css") => "text/css; charset=utf-8",
         Some("js") => "text/javascript; charset=utf-8",
         Some("json") => "application/json; charset=utf-8",
+        Some("txt") => "text/plain; charset=utf-8",
         Some("wasm") => "application/wasm",
         Some("br") => "application/octet-stream",
         Some("svg") => "image/svg+xml",
@@ -229,5 +230,13 @@ mod tests {
         assert!(html.contains("/__rustpress/version"));
         assert!(html.contains("rustpress:refresh"));
         assert!(html.contains("</script></body>"));
+    }
+
+    #[test]
+    fn markdown_text_files_are_served_as_plain_text() {
+        let header = content_type_header(Path::new("/tmp/site/guide/index.md.txt")).unwrap();
+
+        assert_eq!(header.field.as_str(), "Content-Type");
+        assert_eq!(header.value.as_str(), "text/plain; charset=utf-8");
     }
 }

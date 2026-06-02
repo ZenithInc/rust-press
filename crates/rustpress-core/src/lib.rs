@@ -459,12 +459,14 @@ pub fn build_site(options: BuildOptions) -> Result<BuildResult> {
                 route: page.route.clone(),
                 html: page.document.html.clone(),
                 markdown_source: page.markdown_source.clone(),
+                markdown_source_url: markdown_source_url(&config.base, &page.route),
                 headings: page.document.headings.clone(),
                 masked: page.document.frontmatter.access == "masked",
                 search: page.document.frontmatter.search,
             },
         );
         write_page(&out_dir, &page.route, &rendered)?;
+        write_markdown_source(&out_dir, &page.route, &page.markdown_source)?;
 
         if page.document.frontmatter.search {
             search_pages.push(SearchPage {
@@ -986,17 +988,37 @@ fn copy_public_assets(public_dir: &Path, out_dir: &Path) -> Result<()> {
 }
 
 fn write_page(out_dir: &Path, route: &str, html: &str) -> Result<()> {
-    let path = out_dir.join(route.trim_start_matches('/'));
-    let target = if route.ends_with('/') {
-        path.join("index.html")
-    } else {
-        path
-    };
+    let target = page_html_target(out_dir, route);
     if let Some(parent) = target.parent() {
         fs::create_dir_all(parent)
             .with_context(|| format!("failed to create {}", parent.display()))?;
     }
     fs::write(&target, html).with_context(|| format!("failed to write {}", target.display()))
+}
+
+fn write_markdown_source(out_dir: &Path, route: &str, markdown_source: &str) -> Result<()> {
+    let target = page_markdown_target(out_dir, route);
+    if let Some(parent) = target.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    fs::write(&target, markdown_source)
+        .with_context(|| format!("failed to write {}", target.display()))
+}
+
+fn page_html_target(out_dir: &Path, route: &str) -> PathBuf {
+    let path = out_dir.join(route.trim_start_matches('/'));
+    if route.ends_with('/') {
+        path.join("index.html")
+    } else {
+        path
+    }
+}
+
+fn page_markdown_target(out_dir: &Path, route: &str) -> PathBuf {
+    let mut target = page_html_target(out_dir, route);
+    target.set_file_name("index.md.txt");
+    target
 }
 
 fn page_metadata_for(src_dir: &Path, path: &Path, config: &Config) -> Result<PageMetadata> {
@@ -1140,6 +1162,10 @@ fn site_url(base: &str, route: &str) -> String {
     } else {
         format!("{}{}", base, route.trim_start_matches('/'))
     }
+}
+
+fn markdown_source_url(base: &str, route: &str) -> String {
+    format!("{}index.md.txt", site_url(base, route))
 }
 
 fn normalize_nav(nav: &mut Vec<NavSection>, locale_prefix: Option<&str>) {
@@ -1302,7 +1328,9 @@ mod tests {
 
         assert_eq!(result.page_count, 2);
         assert!(dir.path().join("dist/index.html").exists());
+        assert!(dir.path().join("dist/index.md.txt").exists());
         assert!(dir.path().join("dist/private/index.html").exists());
+        assert!(dir.path().join("dist/private/index.md.txt").exists());
         assert!(dir.path().join("dist/assets/search-index.json").exists());
         assert!(dir.path().join("dist/assets/search-index.json.br").exists());
         assert!(dir
@@ -1312,9 +1340,12 @@ mod tests {
 
         let public_html = fs::read_to_string(dir.path().join("dist/index.html")).unwrap();
         let masked_html = fs::read_to_string(dir.path().join("dist/private/index.html")).unwrap();
+        let public_markdown = fs::read_to_string(dir.path().join("dist/index.md.txt")).unwrap();
+        let source_markdown = fs::read_to_string(dir.path().join("docs/index.md")).unwrap();
         let theme_js = fs::read_to_string(dir.path().join("dist/assets/rustpress.js")).unwrap();
         assert!(public_html.contains("rp-topnav-group"));
         assert!(public_html.contains("Masked Page"));
+        assert_eq!(public_markdown, source_markdown);
         assert!(!public_html.contains("data-rp-language-select"));
         assert!(!public_html.contains("data-rp-access-mask"));
         assert!(masked_html.contains("data-rp-access-mask"));
@@ -1394,6 +1425,15 @@ code_line_numbers = false
     }
 
     #[test]
+    fn markdown_source_urls_use_page_directory() {
+        assert_eq!(markdown_source_url("/", "/"), "/index.md.txt");
+        assert_eq!(
+            markdown_source_url("/docs/", "/guide/cli/"),
+            "/docs/guide/cli/index.md.txt"
+        );
+    }
+
+    #[test]
     fn theme_skin_is_limited_to_light_and_dark() {
         let mut dark_config = Config {
             theme: ThemeSection {
@@ -1440,6 +1480,7 @@ github_url = " https://github.com/example/docs "
                 route: "/".to_string(),
                 html: "<h1>Home</h1>".to_string(),
                 markdown_source: "---\ntitle: Home\n---\n# Home\n".to_string(),
+                markdown_source_url: "/index.md.txt".to_string(),
                 headings: vec![],
                 masked: false,
                 search: true,
@@ -1782,10 +1823,15 @@ link = "/reference/api/"
         build_site(BuildOptions::new(dir.path().join("rustpress.toml"))).unwrap();
 
         let html = fs::read_to_string(dir.path().join("dist/agent/index.html")).unwrap();
+        let markdown = fs::read_to_string(dir.path().join("dist/agent/index.md.txt")).unwrap();
+        let source = fs::read_to_string(dir.path().join("docs/agent.md")).unwrap();
         assert!(html.contains("data-rp-copy-markdown"));
+        assert!(html.contains("data-rp-copy-markdown-url"));
         assert!(html.contains("data-rp-markdown-source"));
+        assert!(html.contains(r#"data-rp-markdown-source-url="/agent/index.md.txt""#));
         assert!(html.contains("---\ntitle: Agent Copy\naccess: public\n---"));
         assert!(html.contains("Use &lt;agent&gt; context."));
+        assert_eq!(markdown, source);
     }
 
     fn localized_config() -> Config {

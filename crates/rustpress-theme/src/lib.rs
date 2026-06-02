@@ -61,6 +61,7 @@ pub struct PageRender {
     pub route: String,
     pub html: String,
     pub markdown_source: String,
+    pub markdown_source_url: String,
     pub headings: Vec<Heading>,
     pub masked: bool,
     pub search: bool,
@@ -489,11 +490,18 @@ fn render_markdown_copy(page: &PageRender) -> String {
     }
 
     format!(
-        r#"<button class="rp-markdown-copy" type="button" data-rp-copy-markdown aria-label="Copy Markdown" title="Copy Markdown">
-  <svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-  <svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-</button>
+        r#"<div class="rp-markdown-copy" data-rp-markdown-copy>
+  <button class="rp-markdown-copy-trigger" type="button" data-rp-markdown-copy-trigger aria-label="Copy Markdown" title="Copy Markdown" aria-haspopup="menu" aria-expanded="false">
+    <svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    <svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+  <div class="rp-markdown-copy-menu" data-rp-markdown-copy-menu role="menu" aria-label="Copy Markdown options">
+    <button class="rp-markdown-copy-option" type="button" role="menuitem" data-rp-copy-markdown>Copy Markdown</button>
+    <button class="rp-markdown-copy-option" type="button" role="menuitem" data-rp-copy-markdown-url data-rp-markdown-source-url="{}">Copy Markdown URL</button>
+  </div>
+</div>
 <textarea class="rp-markdown-source" data-rp-markdown-source readonly hidden>{}</textarea>"#,
+        escape_attr(&page.markdown_source_url),
         escape_html(&page.markdown_source)
     )
 }
@@ -1029,12 +1037,17 @@ a:hover { text-decoration: underline; }
   display: block;
 }
 .rp-markdown-copy {
-  appearance: none;
-  -webkit-appearance: none;
   position: fixed;
   right: 28px;
   bottom: 28px;
   z-index: 24;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+.rp-markdown-copy-trigger {
+  appearance: none;
+  -webkit-appearance: none;
   width: 44px;
   height: 44px;
   display: inline-grid;
@@ -1048,7 +1061,7 @@ a:hover { text-decoration: underline; }
   cursor: pointer;
   transition: border-color 140ms ease, background 140ms ease, color 140ms ease, opacity 140ms ease;
 }
-.rp-markdown-copy svg {
+.rp-markdown-copy-trigger svg {
   width: 19px;
   height: 19px;
   fill: none;
@@ -1057,30 +1070,69 @@ a:hover { text-decoration: underline; }
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.rp-markdown-copy:hover,
-.rp-markdown-copy:focus-visible {
+.rp-markdown-copy-trigger:hover,
+.rp-markdown-copy-trigger:focus-visible {
   border-color: var(--rp-accent);
   background: var(--rp-accent-soft);
   color: var(--rp-accent);
 }
-.rp-markdown-copy:focus-visible {
+.rp-markdown-copy-trigger:focus-visible {
   outline: 2px solid var(--rp-accent);
   outline-offset: 2px;
 }
-.rp-markdown-copy:disabled {
+.rp-markdown-copy-trigger:disabled {
   cursor: default;
   opacity: 0.95;
 }
-.rp-markdown-copy[data-rp-copied="true"] {
+.rp-markdown-copy-trigger[data-rp-copied="true"] {
   border-color: var(--rp-accent);
   background: var(--rp-accent-soft);
   color: var(--rp-accent);
 }
-.rp-markdown-copy[data-rp-copied="true"] .rp-code-copy-icon {
+.rp-markdown-copy-trigger[data-rp-copied="true"] .rp-code-copy-icon {
   display: none;
 }
-.rp-markdown-copy[data-rp-copied="true"] .rp-code-copy-check {
+.rp-markdown-copy-trigger[data-rp-copied="true"] .rp-code-copy-check {
   display: block;
+}
+.rp-markdown-copy-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 25;
+  min-width: 182px;
+  display: none;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--rp-line);
+  border-radius: 8px;
+  background: var(--rp-panel);
+  box-shadow: var(--rp-shadow);
+}
+.rp-markdown-copy.is-open .rp-markdown-copy-menu {
+  display: grid;
+}
+.rp-markdown-copy-option {
+  width: 100%;
+  min-height: 34px;
+  display: block;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--rp-muted);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rp-markdown-copy-option:hover,
+.rp-markdown-copy-option:focus-visible {
+  background: var(--rp-accent-soft);
+  color: var(--rp-accent);
+  outline: 0;
 }
 .rp-markdown-source {
   display: none;
@@ -1401,17 +1453,78 @@ for (const button of codeCopyButtons) {{
   }});
 }}
 
-const markdownCopyButton = document.querySelector("[data-rp-copy-markdown]");
+const markdownCopyRoot = document.querySelector("[data-rp-markdown-copy]");
+const markdownCopyTrigger = markdownCopyRoot ? markdownCopyRoot.querySelector("[data-rp-markdown-copy-trigger]") : null;
+const markdownCopyMenu = markdownCopyRoot ? markdownCopyRoot.querySelector("[data-rp-markdown-copy-menu]") : null;
+const markdownCopyButton = markdownCopyRoot ? markdownCopyRoot.querySelector("[data-rp-copy-markdown]") : null;
+const markdownCopyUrlButton = markdownCopyRoot ? markdownCopyRoot.querySelector("[data-rp-copy-markdown-url]") : null;
 const markdownSource = document.querySelector("[data-rp-markdown-source]");
+
+if (markdownCopyRoot && markdownCopyTrigger && markdownCopyMenu) {{
+  markdownCopyTrigger.addEventListener("click", event => {{
+    event.stopPropagation();
+    const wasOpen = markdownCopyRoot.classList.contains("is-open");
+    if (wasOpen) closeMarkdownCopyMenu();
+    else openMarkdownCopyMenu();
+  }});
+  document.addEventListener("click", event => {{
+    if (!markdownCopyRoot.contains(event.target)) closeMarkdownCopyMenu();
+  }});
+  document.addEventListener("keydown", event => {{
+    if (event.key === "Escape") closeMarkdownCopyMenu();
+  }});
+}}
+
 if (markdownCopyButton && markdownSource) {{
-  markdownCopyButton.addEventListener("click", async () => {{
+  markdownCopyButton.addEventListener("click", async event => {{
+    event.stopPropagation();
     try {{
       await copyCodeText(markdownSource.value || "");
-      showCopied(markdownCopyButton, "Copy Markdown", "Copy Markdown");
+      showMarkdownCopied();
+      closeMarkdownCopyMenu();
     }} catch (error) {{
       console.warn("RustPress copy Markdown failed", error);
     }}
   }});
+}}
+
+if (markdownCopyUrlButton) {{
+  markdownCopyUrlButton.addEventListener("click", async event => {{
+    event.stopPropagation();
+    try {{
+      await copyCodeText(markdownCopyHref(markdownCopyUrlButton));
+      showMarkdownCopied();
+      closeMarkdownCopyMenu();
+    }} catch (error) {{
+      console.warn("RustPress copy Markdown URL failed", error);
+    }}
+  }});
+}}
+
+function openMarkdownCopyMenu() {{
+  if (!markdownCopyRoot || !markdownCopyTrigger) return;
+  markdownCopyRoot.classList.add("is-open");
+  markdownCopyTrigger.setAttribute("aria-expanded", "true");
+}}
+
+function closeMarkdownCopyMenu() {{
+  if (!markdownCopyRoot || !markdownCopyTrigger) return;
+  markdownCopyRoot.classList.remove("is-open");
+  markdownCopyTrigger.setAttribute("aria-expanded", "false");
+}}
+
+function markdownCopyHref(button) {{
+  const sourceUrl = button.dataset.rpMarkdownSourceUrl || "";
+  try {{
+    return new URL(sourceUrl, location.href).href;
+  }} catch (error) {{
+    return sourceUrl;
+  }}
+}}
+
+function showMarkdownCopied() {{
+  const button = markdownCopyTrigger || markdownCopyButton || markdownCopyUrlButton;
+  if (button) showCopied(button, "Copy Markdown", "Copy Markdown");
 }}
 
 async function copyCodeText(text) {{
@@ -1683,6 +1796,7 @@ mod tests {
                 route: "/".to_string(),
                 html: "<h1>Home</h1>".to_string(),
                 markdown_source: "---\ntitle: Home\n---\n# Home\n".to_string(),
+                markdown_source_url: "/index.md.txt".to_string(),
                 headings: vec![],
                 masked: true,
                 search: true,
@@ -1707,6 +1821,11 @@ mod tests {
         assert!(html.contains("autocomplete=\"current-password\""));
         assert!(html.contains("front-end viewing mask"));
         assert!(html.contains("data-rp-copy-markdown"));
+        assert!(html.contains("data-rp-copy-markdown-url"));
+        assert!(html.contains("data-rp-markdown-copy-trigger"));
+        assert!(html.contains("data-rp-markdown-copy-menu"));
+        assert!(html.contains(r#"data-rp-markdown-source-url="/index.md.txt""#));
+        assert!(html.contains("Copy Markdown URL"));
         assert!(html.contains("data-rp-markdown-source"));
         assert!(html.contains("---\ntitle: Home\n---\n# Home\n"));
         assert!(html.contains("rp-topnav-group"));
@@ -1762,19 +1881,32 @@ mod tests {
         assert!(styles.contains(".rp-code-line-numbers .rp-code-content"));
         assert!(styles.contains(".rp-markdown-copy"));
         assert!(styles.contains("position: fixed;"));
-        assert!(styles.contains(".rp-markdown-copy[data-rp-copied=\"true\"]"));
+        assert!(styles.contains(".rp-markdown-copy-trigger"));
+        assert!(styles.contains(".rp-markdown-copy-trigger[data-rp-copied=\"true\"]"));
+        assert!(styles.contains(".rp-markdown-copy-menu"));
+        assert!(styles.contains("bottom: calc(100% + 8px);"));
+        assert!(styles.contains(".rp-markdown-copy.is-open .rp-markdown-copy-menu"));
+        assert!(styles.contains(".rp-markdown-copy-option:focus-visible"));
         assert!(styles.contains(".rp-markdown-source"));
 
         let script = js(&site());
         assert!(script.contains("[data-rp-copy-code]"));
         assert!(script.contains("[data-rp-copy-markdown]"));
+        assert!(script.contains("[data-rp-copy-markdown-url]"));
         assert!(script.contains("[data-rp-markdown-source]"));
+        assert!(script.contains("[data-rp-markdown-copy-trigger]"));
+        assert!(script.contains("[data-rp-markdown-copy-menu]"));
         assert!(script.contains("RustPress copy Markdown failed"));
+        assert!(script.contains("RustPress copy Markdown URL failed"));
         assert!(script.contains(".rp-code-content"));
+        assert!(script.contains("openMarkdownCopyMenu"));
+        assert!(script.contains("closeMarkdownCopyMenu"));
+        assert!(script.contains(r#"event.key === "Escape""#));
+        assert!(script.contains("new URL(sourceUrl, location.href).href"));
         assert!(script.contains("navigator.clipboard.writeText"));
         assert!(script.contains("fallbackCopyText"));
         assert!(script.contains("document.execCommand(\"copy\")"));
-        assert!(script.contains("showCopied(markdownCopyButton"));
+        assert!(script.contains("showMarkdownCopied"));
         assert!(script.contains("1500"));
     }
 
@@ -1790,6 +1922,7 @@ mod tests {
                 route: "/".to_string(),
                 html: "<h1>Home</h1>".to_string(),
                 markdown_source: "# Home\n".to_string(),
+                markdown_source_url: "/index.md.txt".to_string(),
                 headings: vec![],
                 masked: false,
                 search: true,

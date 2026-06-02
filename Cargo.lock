@@ -691,7 +691,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "rust-press"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "anyhow",
  "clap",
@@ -714,7 +714,7 @@ dependencies = [
 
 [[package]]
 name = "rustpress-core"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "anyhow",
  "brotli",
@@ -730,7 +730,7 @@ dependencies = [
 
 [[package]]
 name = "rustpress-dev"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "anyhow",
  "notify",
@@ -740,7 +740,7 @@ dependencies = [
 
 [[package]]
 name = "rustpress-md"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "anyhow",
  "once_cell",
@@ -753,7 +753,7 @@ dependencies = [
 
 [[package]]
 name = "rustpress-search"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "regex",
  "serde",
@@ -762,7 +762,7 @@ dependencies = [
 
 [[package]]
 name = "rustpress-theme"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "anyhow",
  "rustpress-md",
