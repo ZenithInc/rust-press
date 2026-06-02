@@ -458,6 +458,7 @@ pub fn build_site(options: BuildOptions) -> Result<BuildResult> {
                 title: page.document.title.clone(),
                 route: page.route.clone(),
                 html: page.document.html.clone(),
+                markdown_source: page.markdown_source.clone(),
                 headings: page.document.headings.clone(),
                 masked: page.document.frontmatter.access == "masked",
                 search: page.document.frontmatter.search,
@@ -495,6 +496,7 @@ struct Page {
     route: String,
     locale_key: String,
     translation_key: String,
+    markdown_source: String,
     document: Document,
 }
 
@@ -534,6 +536,7 @@ fn read_pages(src_dir: &Path, config: &Config) -> Result<Vec<Page>> {
             route: metadata.route,
             locale_key: metadata.locale_key,
             translation_key: metadata.translation_key,
+            markdown_source: markdown,
             document,
         });
     }
@@ -1436,6 +1439,7 @@ github_url = " https://github.com/example/docs "
                 title: "Home".to_string(),
                 route: "/".to_string(),
                 html: "<h1>Home</h1>".to_string(),
+                markdown_source: "---\ntitle: Home\n---\n# Home\n".to_string(),
                 headings: vec![],
                 masked: false,
                 search: true,
@@ -1763,6 +1767,25 @@ link = "/reference/api/"
         let index = fs::read_to_string(dir.path().join("dist/assets/search-index.json")).unwrap();
         assert!(!index.contains("UniqueSecret"));
         assert!(!index.contains("\"Hidden\""));
+    }
+
+    #[test]
+    fn rendered_pages_include_copyable_markdown_source() {
+        let dir = tempfile::tempdir().unwrap();
+        init_project(dir.path()).unwrap();
+        fs::write(
+            dir.path().join("docs/agent.md"),
+            "---\ntitle: Agent Copy\naccess: public\n---\n# Agent Copy\n\nUse <agent> context.\n",
+        )
+        .unwrap();
+
+        build_site(BuildOptions::new(dir.path().join("rustpress.toml"))).unwrap();
+
+        let html = fs::read_to_string(dir.path().join("dist/agent/index.html")).unwrap();
+        assert!(html.contains("data-rp-copy-markdown"));
+        assert!(html.contains("data-rp-markdown-source"));
+        assert!(html.contains("---\ntitle: Agent Copy\naccess: public\n---"));
+        assert!(html.contains("Use &lt;agent&gt; context."));
     }
 
     fn localized_config() -> Config {

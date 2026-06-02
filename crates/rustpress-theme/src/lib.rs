@@ -60,6 +60,7 @@ pub struct PageRender {
     pub title: String,
     pub route: String,
     pub html: String,
+    pub markdown_source: String,
     pub headings: Vec<Heading>,
     pub masked: bool,
     pub search: bool,
@@ -101,6 +102,7 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
     } else {
         String::new()
     };
+    let markdown_copy = render_markdown_copy(page);
 
     format!(
         r#"<!doctype html>
@@ -138,6 +140,7 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
     {toc}
   </main>
 </div>
+{markdown_copy}
 {search_dialog}
 {access_mask}
 <script type="module" src="{asset_base}/assets/rustpress.js"></script>
@@ -161,6 +164,7 @@ pub fn render_page(site: &SiteRender, page: &PageRender) -> String {
         nav = render_nav(site, page),
         content = page.html,
         toc = render_toc(page),
+        markdown_copy = markdown_copy,
         search_dialog = render_search_dialog(site),
         access_mask = access_mask,
         mermaid_script = mermaid_script(),
@@ -477,6 +481,21 @@ fn render_search_dialog(site: &SiteRender) -> String {
   <div class="rp-search-results" data-rp-search-results></div>
 </dialog>"#
         .to_string()
+}
+
+fn render_markdown_copy(page: &PageRender) -> String {
+    if page.markdown_source.is_empty() {
+        return String::new();
+    }
+
+    format!(
+        r#"<button class="rp-markdown-copy" type="button" data-rp-copy-markdown aria-label="Copy Markdown" title="Copy Markdown">
+  <svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+  <svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+</button>
+<textarea class="rp-markdown-source" data-rp-markdown-source readonly hidden>{}</textarea>"#,
+        escape_html(&page.markdown_source)
+    )
 }
 
 fn render_access_mask(site: &SiteRender) -> String {
@@ -1009,6 +1028,63 @@ a:hover { text-decoration: underline; }
 .rp-code-copy[data-rp-copied="true"] .rp-code-copy-check {
   display: block;
 }
+.rp-markdown-copy {
+  appearance: none;
+  -webkit-appearance: none;
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 24;
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--rp-line);
+  border-radius: 8px;
+  background: var(--rp-panel);
+  color: var(--rp-muted);
+  box-shadow: var(--rp-shadow);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease, opacity 140ms ease;
+}
+.rp-markdown-copy svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.rp-markdown-copy:hover,
+.rp-markdown-copy:focus-visible {
+  border-color: var(--rp-accent);
+  background: var(--rp-accent-soft);
+  color: var(--rp-accent);
+}
+.rp-markdown-copy:focus-visible {
+  outline: 2px solid var(--rp-accent);
+  outline-offset: 2px;
+}
+.rp-markdown-copy:disabled {
+  cursor: default;
+  opacity: 0.95;
+}
+.rp-markdown-copy[data-rp-copied="true"] {
+  border-color: var(--rp-accent);
+  background: var(--rp-accent-soft);
+  color: var(--rp-accent);
+}
+.rp-markdown-copy[data-rp-copied="true"] .rp-code-copy-icon {
+  display: none;
+}
+.rp-markdown-copy[data-rp-copied="true"] .rp-code-copy-check {
+  display: block;
+}
+.rp-markdown-source {
+  display: none;
+}
 .rp-code pre {
   margin: 0;
   padding-right: 56px;
@@ -1217,6 +1293,7 @@ h6:hover .heading-anchor { opacity: 1; text-decoration: none; }
   .rp-doc h1 { font-size: 32px; }
   .rp-doc h2 { font-size: 24px; }
   .heading-anchor { margin-left: 0; width: auto; opacity: 1; margin-right: 6px; }
+  .rp-markdown-copy { right: 16px; bottom: 16px; }
 }
 "#
 }
@@ -1324,6 +1401,19 @@ for (const button of codeCopyButtons) {{
   }});
 }}
 
+const markdownCopyButton = document.querySelector("[data-rp-copy-markdown]");
+const markdownSource = document.querySelector("[data-rp-markdown-source]");
+if (markdownCopyButton && markdownSource) {{
+  markdownCopyButton.addEventListener("click", async () => {{
+    try {{
+      await copyCodeText(markdownSource.value || "");
+      showCopied(markdownCopyButton, "Copy Markdown", "Copy Markdown");
+    }} catch (error) {{
+      console.warn("RustPress copy Markdown failed", error);
+    }}
+  }});
+}}
+
 async function copyCodeText(text) {{
   if (window.navigator && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {{
     try {{
@@ -1359,6 +1449,10 @@ function fallbackCopyText(text) {{
 }}
 
 function showCodeCopied(button) {{
+  showCopied(button, "Copy code", "Copy code");
+}}
+
+function showCopied(button, resetLabel, resetTitle) {{
   button.dataset.rpCopied = "true";
   button.disabled = true;
   button.setAttribute("aria-label", "Copied");
@@ -1367,8 +1461,8 @@ function showCodeCopied(button) {{
   button.rpCopyReset = window.setTimeout(() => {{
     delete button.dataset.rpCopied;
     button.disabled = false;
-    button.setAttribute("aria-label", "Copy code");
-    button.setAttribute("title", "Copy code");
+    button.setAttribute("aria-label", resetLabel);
+    button.setAttribute("title", resetTitle);
   }}, 1500);
 }}
 
@@ -1588,6 +1682,7 @@ mod tests {
                 title: "Home".to_string(),
                 route: "/".to_string(),
                 html: "<h1>Home</h1>".to_string(),
+                markdown_source: "---\ntitle: Home\n---\n# Home\n".to_string(),
                 headings: vec![],
                 masked: true,
                 search: true,
@@ -1611,6 +1706,9 @@ mod tests {
         assert!(html.contains("data-rp-access-error"));
         assert!(html.contains("autocomplete=\"current-password\""));
         assert!(html.contains("front-end viewing mask"));
+        assert!(html.contains("data-rp-copy-markdown"));
+        assert!(html.contains("data-rp-markdown-source"));
+        assert!(html.contains("---\ntitle: Home\n---\n# Home\n"));
         assert!(html.contains("rp-topnav-group"));
         assert!(html.contains("rp-topnav-trigger"));
         assert!(html.contains("Reference"));
@@ -1662,13 +1760,21 @@ mod tests {
         assert!(!styles.contains("grid-template-columns: minmax(42px, auto)"));
         assert!(styles.contains("user-select: none;"));
         assert!(styles.contains(".rp-code-line-numbers .rp-code-content"));
+        assert!(styles.contains(".rp-markdown-copy"));
+        assert!(styles.contains("position: fixed;"));
+        assert!(styles.contains(".rp-markdown-copy[data-rp-copied=\"true\"]"));
+        assert!(styles.contains(".rp-markdown-source"));
 
         let script = js(&site());
         assert!(script.contains("[data-rp-copy-code]"));
+        assert!(script.contains("[data-rp-copy-markdown]"));
+        assert!(script.contains("[data-rp-markdown-source]"));
+        assert!(script.contains("RustPress copy Markdown failed"));
         assert!(script.contains(".rp-code-content"));
         assert!(script.contains("navigator.clipboard.writeText"));
         assert!(script.contains("fallbackCopyText"));
         assert!(script.contains("document.execCommand(\"copy\")"));
+        assert!(script.contains("showCopied(markdownCopyButton"));
         assert!(script.contains("1500"));
     }
 
@@ -1683,6 +1789,7 @@ mod tests {
                 title: "Home".to_string(),
                 route: "/".to_string(),
                 html: "<h1>Home</h1>".to_string(),
+                markdown_source: "# Home\n".to_string(),
                 headings: vec![],
                 masked: false,
                 search: true,
