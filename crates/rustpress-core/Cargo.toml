@@ -19,9 +19,9 @@ serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true
 walkdir.workspace = true
-rustpress-md = { version = "0.1.7", path = "../rustpress-md" }
-rustpress-search = { version = "0.1.7", path = "../rustpress-search" }
-rustpress-theme = { version = "0.1.7", path = "../rustpress-theme" }
+rustpress-md = { version = "0.1.8", path = "../rustpress-md" }
+rustpress-search = { version = "0.1.8", path = "../rustpress-search" }
+rustpress-theme = { version = "0.1.8", path = "../rustpress-theme" }
 
 [dev-dependencies]
 tempfile.workspace = true

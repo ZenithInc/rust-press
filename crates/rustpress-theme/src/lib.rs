@@ -1014,10 +1014,14 @@ a:hover { text-decoration: underline; }
   padding-right: 56px;
   border-radius: 0;
   box-shadow: none;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9em;
+  line-height: 1.65;
 }
 .rp-code code {
   display: block;
   min-width: max-content;
+  font: inherit;
 }
 .rp-code-line-numbers pre {
   display: grid;
@@ -1650,6 +1654,10 @@ mod tests {
         assert!(styles.contains(".rp-code-line-numbers pre"));
         assert!(styles.contains("grid-template-columns: 72px minmax(0, max-content);"));
         assert!(styles.contains(".rp-code-lines"));
+        assert!(styles.contains("font-family: ui-monospace"));
+        assert!(styles.contains("font-size: 0.9em;"));
+        assert!(styles.contains("line-height: 1.65;"));
+        assert!(styles.contains("font: inherit;"));
         assert!(styles.contains("width: 72px;"));
         assert!(!styles.contains("grid-template-columns: minmax(42px, auto)"));
         assert!(styles.contains("user-select: none;"));
