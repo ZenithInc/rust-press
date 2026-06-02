@@ -15,7 +15,7 @@ license = "MIT"
 repository = "https://github.com/ZenithInc/rust-press"
 homepage = "https://github.com/ZenithInc/rust-press"
 rust-version = "1.93"
-version = "0.1.5"
+version = "0.1.6"
 
 [workspace.dependencies]
 anyhow = "1.0.98"

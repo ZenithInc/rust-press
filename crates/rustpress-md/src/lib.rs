@@ -248,6 +248,7 @@ fn render_code_block(
     highlight: bool,
     code_line_numbers: bool,
 ) -> String {
+    let code = trim_trailing_blank_lines(code);
     let normalized_lang = lang
         .map(normalize_code_lang)
         .filter(|lang| !lang.is_empty());
@@ -282,6 +283,24 @@ fn render_code_block(
     format!(
         r#"<div class="rp-code">{header}<button class="rp-code-copy" type="button" data-rp-copy-code aria-label="Copy code" title="Copy code"><svg class="rp-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="rp-code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button><pre><code class="rp-code-content{lang_class}">{content}</code></pre></div>"#
     )
+}
+
+fn trim_trailing_blank_lines(code: &str) -> &str {
+    let mut end = code.len();
+
+    for line in LinesWithEndings::from(code)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+    {
+        if line.trim().is_empty() {
+            end -= line.len();
+        } else {
+            break;
+        }
+    }
+
+    &code[..end]
 }
 
 fn normalize_code_lang(lang: &str) -> &str {
@@ -514,11 +533,20 @@ mod tests {
     fn code_line_numbers_match_multiline_trailing_and_empty_blocks() {
         let multiline = render_code_block("one\ntwo\n\n", None, false, true);
         assert!(
-            multiline.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1\n2\n3</span>")
+            multiline.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1\n2</span>")
         );
+        assert!(multiline.contains("<code class=\"rp-code-content\">one\ntwo\n</code>"));
 
         let empty = render_code_block("", None, false, true);
         assert!(empty.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1</span>"));
+    }
+
+    #[test]
+    fn code_block_trims_trailing_whitespace_only_lines() {
+        let html = render_code_block("one\n  \n\t\n", None, false, true);
+
+        assert!(html.contains("<span class=\"rp-code-lines\" aria-hidden=\"true\">1</span>"));
+        assert!(html.contains("<code class=\"rp-code-content\">one\n</code>"));
     }
 
     #[test]
