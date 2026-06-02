@@ -18,15 +18,15 @@ src_dir = "docs"
 out_dir = "dist"
 base = "/"
 
-[[nav]]
+[[top_nav]]
 text = "Guide"
-link = "/guide/cli/"
+link = "/guide/installation/"
 
-[[nav.items]]
-text = "CLI"
-link = "/guide/cli/"
+[[top_nav.items]]
+text = "Quick Start"
+link = "/guide/installation/"
 
-[[nav.items]]
+[[top_nav.items]]
 text = "Configuration"
 link = "/guide/configuration/"
 
@@ -70,34 +70,34 @@ access: public
 
 ## Top Navigation and Sidebars
 
-Use `[[nav]]` to render top navigation links or grouped menus.
+Use `[[top_nav]]` to render top navigation links or grouped menus.
 
 ```toml
-[[nav]]
+[[top_nav]]
 text = "Guide"
-link = "/guide/cli/"
+link = "/guide/installation/"
 sidebar = "guide"
 
-[[nav.items]]
-text = "CLI"
-link = "/guide/cli/"
+[[top_nav.items]]
+text = "Quick Start"
+link = "/guide/installation/"
 
-[[nav.items]]
-text = "Configuration"
-link = "/guide/configuration/"
+[[top_nav.items]]
+text = "Markdown"
+link = "/guide/markdown-tutorial/"
 
-[[nav]]
+[[top_nav]]
 text = "Reference"
 link = "/internals/crates/"
 sidebar = "reference"
 
 [[sidebars.guide]]
 text = "Guide"
-link = "/guide/cli/"
+link = "/guide/installation/"
 
 [[sidebars.guide.items]]
-text = "CLI"
-link = "/guide/cli/"
+text = "Installation"
+link = "/guide/installation/"
 
 [[sidebars.guide.items]]
 text = "Configuration"
@@ -112,9 +112,9 @@ text = "Crates"
 link = "/internals/crates/"
 ```
 
-When `items` are present, the theme renders a dropdown menu. When `items` are omitted, the item renders as a direct top-level link.
+`top_nav.items` only controls the top dropdown menu. When `items` are omitted, the item renders as a direct top-level link.
 
-Add `sidebar = "name"` to a top navigation item to bind pages in that section to `sidebars.name`. If no `sidebars` are configured, RustPress keeps the legacy behavior and builds the sidebar from Markdown pages plus `nav` ordering.
+`sidebars.<name>.items` controls the left sidebar. Add `sidebar = "name"` to a top navigation item to bind that top-level section to `sidebars.name`; it does not reuse `top_nav.items` as sidebar entries.
 
 ## Multilingual Docs
 
@@ -140,18 +140,22 @@ label = "한국어"
 lang = "ko-KR"
 link = "/ko/"
 
-[[locales.en.nav]]
+[[locales.en.top_nav]]
 text = "Guide"
-link = "guide/cli/"
+link = "guide/installation/"
 sidebar = "guide"
+
+[[locales.en.top_nav.items]]
+text = "Quick Start"
+link = "guide/installation/"
 
 [[locales.en.sidebars.guide]]
 text = "Guide"
-link = "guide/cli/"
+link = "guide/installation/"
 
 [[locales.en.sidebars.guide.items]]
-text = "CLI"
-link = "guide/cli/"
+text = "Installation"
+link = "guide/installation/"
 ```
 
 The root language keeps using files directly under `docs/`. Other locale files live in `docs/<locale>/`.
@@ -165,6 +169,6 @@ docs/ja/index.md           -> /ja/
 docs/ko/index.md           -> /ko/
 ```
 
-Non-root locale links default to `/<locale>/`; use `link` to override that prefix. Locale `nav`, `sidebars`, and `title` override the global values, and fall back to global config when omitted. Relative locale nav and sidebar links are resolved under that locale prefix, so `guide/cli/` in `locales.en.nav` or `locales.en.sidebars.guide` becomes `/en/guide/cli/`.
+Non-root locale links default to `/<locale>/`; use `link` to override that prefix. Locale `top_nav`, `sidebars`, and `title` override the global values, and fall back to global config when omitted. Relative locale top navigation and sidebar links are resolved under that locale prefix, so `guide/installation/` in `locales.en.top_nav` or `locales.en.sidebars.guide` becomes `/en/guide/installation/`.
 
 The language selector appears in the top bar only when `locales` is configured. It switches to the matching translated page when one exists. If a translation is missing, it links to that language's home page.

@@ -85,22 +85,26 @@ src_dir = "docs"
 out_dir = "dist"
 base = "/"
 
-[[nav]]
+[[top_nav]]
 text = "Guide"
-link = "/guide/cli/"
+link = "/guide/installation/"
 sidebar = "guide"
 
-[[nav.items]]
-text = "CLI"
-link = "/guide/cli/"
+[[top_nav.items]]
+text = "Quick Start"
+link = "/guide/installation/"
 
 [[sidebars.guide]]
 text = "Guide"
-link = "/guide/cli/"
+link = "/guide/installation/"
 
 [[sidebars.guide.items]]
-text = "CLI"
-link = "/guide/cli/"
+text = "Installation"
+link = "/guide/installation/"
+
+[[sidebars.guide.items]]
+text = "Configuration"
+link = "/guide/configuration/"
 
 [theme]
 name = "default"

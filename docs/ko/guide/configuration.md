@@ -18,15 +18,15 @@ src_dir = "docs"
 out_dir = "dist"
 base = "/"
 
-[[nav]]
+[[top_nav]]
 text = "가이드"
-link = "/guide/cli/"
+link = "/guide/installation/"
 
-[[nav.items]]
-text = "CLI"
-link = "/guide/cli/"
+[[top_nav.items]]
+text = "빠른 시작"
+link = "/guide/installation/"
 
-[[nav.items]]
+[[top_nav.items]]
 text = "설정"
 link = "/guide/configuration/"
 
@@ -70,34 +70,34 @@ access: public
 
 ## 상단 내비게이션과 사이드바
 
-`[[nav]]`를 사용해 상단 내비게이션 링크 또는 그룹 메뉴를 렌더링합니다.
+`[[top_nav]]`를 사용해 상단 내비게이션 링크 또는 그룹 메뉴를 렌더링합니다.
 
 ```toml
-[[nav]]
+[[top_nav]]
 text = "가이드"
-link = "/guide/cli/"
+link = "/guide/installation/"
 sidebar = "guide"
 
-[[nav.items]]
-text = "CLI"
-link = "/guide/cli/"
+[[top_nav.items]]
+text = "빠른 시작"
+link = "/guide/installation/"
 
-[[nav.items]]
-text = "설정"
-link = "/guide/configuration/"
+[[top_nav.items]]
+text = "Markdown"
+link = "/guide/markdown-tutorial/"
 
-[[nav]]
+[[top_nav]]
 text = "참조"
 link = "/internals/crates/"
 sidebar = "reference"
 
 [[sidebars.guide]]
 text = "가이드"
-link = "/guide/cli/"
+link = "/guide/installation/"
 
 [[sidebars.guide.items]]
-text = "CLI"
-link = "/guide/cli/"
+text = "설치"
+link = "/guide/installation/"
 
 [[sidebars.guide.items]]
 text = "설정"
@@ -112,9 +112,9 @@ text = "Crates"
 link = "/internals/crates/"
 ```
 
-`items`가 있으면 테마는 드롭다운 메뉴를 렌더링합니다. `items`가 없으면 해당 항목은 직접적인 상위 링크로 렌더링됩니다.
+`top_nav.items`는 상단 드롭다운 메뉴만 제어합니다. `items`가 없으면 해당 항목은 직접적인 상위 링크로 렌더링됩니다.
 
-상단 내비게이션 항목에 `sidebar = "name"`을 추가하면 해당 섹션의 페이지가 `sidebars.name`에 연결됩니다. `sidebars`를 설정하지 않으면 RustPress는 기존처럼 Markdown 페이지와 `nav` 순서에서 사이드바를 자동 생성합니다.
+`sidebars.<name>.items`는 왼쪽 사이드바를 제어합니다. 상단 내비게이션 항목에 `sidebar = "name"`을 추가하면 해당 상위 섹션을 `sidebars.name`에 연결합니다. `top_nav.items`가 사이드바 항목으로 재사용되지는 않습니다.
 
 ## 다국어 문서
 
@@ -140,18 +140,22 @@ label = "한국어"
 lang = "ko-KR"
 link = "/ko/"
 
-[[locales.en.nav]]
+[[locales.en.top_nav]]
 text = "Guide"
-link = "guide/cli/"
+link = "guide/installation/"
 sidebar = "guide"
+
+[[locales.en.top_nav.items]]
+text = "Quick Start"
+link = "guide/installation/"
 
 [[locales.en.sidebars.guide]]
 text = "Guide"
-link = "guide/cli/"
+link = "guide/installation/"
 
 [[locales.en.sidebars.guide.items]]
-text = "CLI"
-link = "guide/cli/"
+text = "Installation"
+link = "guide/installation/"
 ```
 
 루트 언어는 계속 `docs/` 바로 아래의 파일을 사용합니다. 다른 언어 파일은 `docs/<locale>/`에 둡니다.
@@ -165,6 +169,6 @@ docs/ja/index.md           -> /ja/
 docs/ko/index.md           -> /ko/
 ```
 
-root가 아닌 언어 링크는 기본적으로 `/<locale>/`입니다. `link`로 이 prefix를 덮어쓸 수 있습니다. Locale의 `nav`, `sidebars`, `title`은 전역 값을 덮어쓰며, 생략하면 전역 설정으로 fallback됩니다. Locale 내비게이션과 사이드바의 상대 링크는 해당 언어 prefix 아래로 해석됩니다. 예를 들어 `locales.en.nav` 또는 `locales.en.sidebars.guide`의 `guide/cli/`는 `/en/guide/cli/`가 됩니다.
+root가 아닌 언어 링크는 기본적으로 `/<locale>/`입니다. `link`로 이 prefix를 덮어쓸 수 있습니다. Locale의 `top_nav`, `sidebars`, `title`은 전역 값을 덮어쓰며, 생략하면 전역 설정으로 fallback됩니다. Locale 상단 내비게이션과 사이드바의 상대 링크는 해당 언어 prefix 아래로 해석됩니다. 예를 들어 `locales.en.top_nav` 또는 `locales.en.sidebars.guide`의 `guide/installation/`는 `/en/guide/installation/`가 됩니다.
 
 언어 선택기는 `locales`가 설정된 경우에만 상단 바에 표시됩니다. 언어를 전환하면 해당 번역 페이지로 이동합니다. 대상 언어에 해당 페이지가 없으면 그 언어의 홈 페이지로 이동합니다.
