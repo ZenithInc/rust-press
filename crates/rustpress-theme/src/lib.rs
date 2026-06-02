@@ -1021,13 +1021,14 @@ a:hover { text-decoration: underline; }
 }
 .rp-code-line-numbers pre {
   display: grid;
-  grid-template-columns: minmax(42px, auto) minmax(0, max-content);
+  grid-template-columns: 72px minmax(0, max-content);
   align-items: start;
   padding-left: 0;
 }
 .rp-code-lines {
   display: block;
-  min-width: 42px;
+  box-sizing: border-box;
+  width: 72px;
   padding: 0 12px 0 16px;
   border-right: 1px solid rgb(255 255 255 / 12%);
   color: rgb(237 247 246 / 42%);
@@ -1647,10 +1648,10 @@ mod tests {
         assert!(styles.contains(".rp-code-copy:disabled"));
         assert!(styles.contains("padding-right: 56px;"));
         assert!(styles.contains(".rp-code-line-numbers pre"));
-        assert!(
-            styles.contains("grid-template-columns: minmax(42px, auto) minmax(0, max-content);")
-        );
+        assert!(styles.contains("grid-template-columns: 72px minmax(0, max-content);"));
         assert!(styles.contains(".rp-code-lines"));
+        assert!(styles.contains("width: 72px;"));
+        assert!(!styles.contains("grid-template-columns: minmax(42px, auto)"));
         assert!(styles.contains("user-select: none;"));
         assert!(styles.contains(".rp-code-line-numbers .rp-code-content"));
 
