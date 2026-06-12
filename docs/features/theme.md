@@ -8,34 +8,73 @@ access: public
 
 # 主题
 
-默认主题由静态 HTML、CSS 和一个小型 JavaScript runtime 组成。
+RustPress 目前提供一个内置默认主题。主题由静态 HTML、CSS 和 JavaScript runtime 组成，不依赖前端构建工具。
+
+## 页面布局
+
+默认页面包含：
+
+- sticky 顶部栏。
+- 顶部下拉导航。
+- 左侧侧边栏。
+- 正文区域。
+- 二级和三级标题目录。
+- 语言切换器。
+- 搜索对话框。
+- Light/Dark 切换器。
+- GitHub 链接。
+- 右下角 Markdown 复制菜单。
+
+移动端会折叠布局，保留顶部导航和文档正文的可读性。
+
+## 顶部导航和侧边栏
+
+主题同时渲染两套导航：
+
+- `top_nav` 渲染顶部菜单和顶部下拉。
+- `sidebars` 渲染左侧文档目录。
+
+两者是独立配置。`sidebar = "guide"` 只是把顶部分区绑定到左侧某个组，不会把 `top_nav.items` 复制到侧边栏。
 
 ## 颜色模式
 
-主题内置两种颜色模式：
+```toml
+[theme]
+skin = "light"
+allow_switch = true
+```
+
+`skin` 支持：
 
 - `light`
 - `dark`
 
-当 `allow_switch = true` 时，顶部栏会显示 Light/Dark 切换器，并把选择保存到 `localStorage`。
+`allow_switch = true` 时，顶部栏显示切换按钮。用户选择会保存到 `localStorage`。
 
 ## GitHub 链接
-
-在 `[theme]` 中配置 `github_url` 后，顶部栏右侧会显示 GitHub 图标。点击图标会打开对应的仓库。
 
 ```toml
 [theme]
 github_url = "https://github.com/your-org/your-repo"
 ```
 
-## 布局
+配置后顶部栏会显示 GitHub 图标。空字符串会隐藏图标。
 
-生成的页面包含：
+## 搜索 UI
 
-- sticky 顶部导航
-- 侧边栏导航
-- 响应式移动菜单
-- 二级和三级标题目录
-- 本地搜索对话框
+开启 `[search].enabled` 后，主题会显示搜索按钮。用户也可以按两次 `Shift` 打开搜索对话框。
 
-主题不会把前端遮罩描述成安全机制。
+搜索结果在浏览器中读取 `assets/search-index.json`，不请求后端服务。
+
+## Markdown 和代码复制
+
+主题提供两类复制能力：
+
+- 每个代码块的复制按钮。
+- 页面右下角的 Markdown 复制菜单。
+
+复制按钮会在成功后短暂显示完成状态。
+
+## 访问遮罩 UI
+
+`access: masked` 页面会显示前端遮罩面板。主题文案明确提示：这是查看遮挡，不是安全保护。

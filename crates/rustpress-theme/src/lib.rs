@@ -922,6 +922,19 @@ a:hover { text-decoration: underline; }
 .rp-doc h3 { font-size: 22px; }
 .rp-doc p,
 .rp-doc li { color: var(--rp-text); }
+.rp-doc ul,
+.rp-doc ol {
+  margin: 1.1em 0 1.25em;
+  padding-left: 1.55em;
+}
+.rp-doc li {
+  margin: 0.45em 0;
+  padding-left: 0.1em;
+}
+.rp-doc li > ul,
+.rp-doc li > ol {
+  margin: 0.55em 0;
+}
 .rp-doc blockquote {
   margin: 20px 0;
   padding: 4px 18px;

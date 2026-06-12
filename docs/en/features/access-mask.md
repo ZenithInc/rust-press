@@ -8,13 +8,11 @@ access: masked
 
 # Access Mask
 
-This page is marked with `access: masked`.
+This page uses `access: masked`, so RustPress shows the front-end access mask.
 
-The overlay is only a front-end viewing mask. It does not encrypt content, does not remove content from static HTML, and does not provide server-side authentication.
+## What It Does
 
-## Test Behavior
-
-The example site configures a demo password in `[access].password`. Enter the correct password to hide the overlay for this browser session.
+The mask is useful for demos, lightweight internal previews, or avoiding casual browsing. After the user enters the configured password, the current browser session remembers the unlock state.
 
 ```toml
 [access]
@@ -24,8 +22,49 @@ password = "rustpress"
 password_hint = "Enter password"
 ```
 
-If `password` is not configured, `access: masked` pages do not show the overlay.
+Page frontmatter:
 
-## Note
+```yaml
+---
+title: Private Preview
+access: masked
+---
+```
 
-Access masking is only a front-end overlay, not security protection. The generated HTML and front-end script remain directly viewable.
+## What It Does Not Do
+
+The access mask is not authentication:
+
+- It does not encrypt HTML.
+- It does not remove content from `dist/`.
+- It does not prevent reading source files or network responses.
+- It does not replace server login, VPN, reverse-proxy auth, or storage permissions.
+
+Use real hosting-level access control for sensitive content.
+
+## Display Conditions
+
+The mask appears only when all conditions are true:
+
+1. `[access].enabled = true`
+2. `[access].mode = "mask"`
+3. `[access].password` is not empty
+4. The page has `access: masked`
+
+Otherwise the page renders normally.
+
+## Unlock Behavior
+
+The runtime stores the unlock state for the current path in `sessionStorage`.
+
+- Refreshing the same page stays unlocked.
+- Closing the browser session requires unlocking again.
+- Different paths are tracked separately.
+
+## Search
+
+`access: masked` does not exclude a page from search. Add this if needed:
+
+```yaml
+search: false
+```

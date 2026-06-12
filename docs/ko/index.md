@@ -8,32 +8,59 @@ access: public
 
 # RustPress
 
-RustPress는 Rust-first 정적 문서 생성기 MVP입니다. `rustpress.toml`을 읽고, `docs/`의 Markdown을 스캔하고, 정적 HTML을 렌더링하고, 테마 자산을 쓰고, 로컬 검색 인덱스를 구축합니다.
+RustPress는 Rust-first 정적 문서 생성기입니다. `rustpress.toml`을 읽고 `docs/`의 Markdown을 정적 HTML로 렌더링하며, 테마 자산, 로컬 검색 인덱스, 복사 가능한 Markdown 원본 파일을 생성합니다.
 
-## 현재 MVP
+## 기능 지도
 
-- `rust-press init [dir]`은 최소 문서 프로젝트를 만듭니다.
-- `rust-press build`는 Markdown을 `dist/`로 렌더링합니다.
-- `rust-press dev`는 Markdown 또는 설정 파일이 변경될 때 다시 빌드합니다.
-- `rust-press preview`는 생성된 정적 출력을 제공합니다.
-- 기본 테마에는 Light/Dark 전환, 로컬 검색, Mermaid 렌더링, 사이드바 내비게이션, 프런트엔드 접근 마스크가 포함됩니다.
+| 기능 | RustPress가 하는 일 | 문서 |
+| --- | --- | --- |
+| CLI | 초기화, 빌드, 개발 서버, 미리보기 | [CLI](/ko/guide/cli/) |
+| 설정 | `top_nav`, `sidebars`, `locales`, 테마, 검색, 접근 마스크 | [설정](/ko/guide/configuration/) |
+| Markdown | 표, 작업 목록, 각주, 코드 하이라이트, 줄 번호, 복사 버튼 | [Markdown](/ko/features/markdown/) |
+| Mermaid | `mermaid` 코드 블록을 다이어그램으로 렌더링 | [Markdown 튜토리얼](/ko/guide/markdown-tutorial/) |
+| 테마 | 상단 내비게이션, 사이드바, 목차, Light/Dark, GitHub 링크 | [테마](/ko/features/theme/) |
+| 검색 | JSON 기반 로컬 검색, 영어와 CJK 지원 | [검색](/ko/features/search/) |
+| 다국어 | `docs/<locale>/` 라우트, 언어 전환, 번역 fallback 처리 | [설정](/ko/guide/configuration/#다국어-문서) |
+| 접근 마스크 | `access: masked` 페이지에 프런트엔드 비밀번호 마스크 표시 | [접근 마스크](/ko/features/access-mask/) |
+| 내부 구조 | CLI, core, Markdown, theme, search, dev server crate 분리 | [Crates](/ko/internals/crates/) |
 
 ## 빌드 흐름
 
 ```mermaid
 flowchart LR
-    A[rustpress.toml] --> B[Markdown 스캔]
-    B --> C[frontmatter 파싱]
-    C --> D[HTML 렌더링]
-    D --> E[dist 쓰기]
-    B --> F[검색 인덱스 구축]
-    F --> E
+    Config[rustpress.toml] --> Load[설정 로드]
+    Docs[docs/**/*.md] --> Parse[frontmatter와 Markdown 파싱]
+    Parse --> Render[HTML 렌더링]
+    Parse --> Search[검색 인덱스 생성]
+    Public[public/] --> Copy[정적 자산 복사]
+    Render --> Dist[dist/]
+    Search --> Dist
+    Copy --> Dist
 ```
 
-## 검색해 보기
+## 출력물
 
-`theme`, `build`, `Mermaid` 같은 영어 단어를 검색할 수 있습니다. 검색에는 중국어 콘텐츠도 포함됩니다. 예를 들어 `搜索`와 `访问遮罩`를 검색해 볼 수 있습니다.
+- 각 페이지의 `index.html`
+- 각 페이지의 `index.md.txt`
+- `assets/rustpress.css`, `assets/rustpress.js`
+- 검색 자산 `search-index.json`, `search-index.json.br`, `rustpress_search_bg.wasm`
+- `public/`의 정적 파일
 
-## 정적 출력
+## 빠른 시작
 
-생성된 사이트는 완전히 정적입니다. 접근 마스크는 사용자 인터페이스 계층일 뿐입니다. 페이지 HTML은 여전히 `dist/`에 남아 있습니다.
+```bash
+cargo install rust-press
+rust-press init my-docs
+cd my-docs
+rust-press dev
+```
+
+정적 파일 생성:
+
+```bash
+rust-press build --config rustpress.toml
+```
+
+## 보안 경계
+
+RustPress는 정적 파일을 생성합니다. 접근 마스크는 표시 계층일 뿐 HTML을 암호화하지 않습니다. 민감한 문서는 호스팅 계층의 실제 인증 뒤에 배포하세요.

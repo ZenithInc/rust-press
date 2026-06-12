@@ -8,28 +8,98 @@ access: public
 
 # Crates
 
-The workspace is split into small crates.
+The RustPress workspace is split into small crates with clear responsibilities.
+
+## Overview
+
+```mermaid
+flowchart LR
+    CLI[rust-press] --> Core[rustpress-core]
+    Dev[rustpress-dev] --> Core
+    Core --> MD[rustpress-md]
+    Core --> Theme[rustpress-theme]
+    Core --> Search[rustpress-search]
+```
 
 ## rust-press
 
-Parses command-line arguments and dispatches commands.
+CLI entrypoint. It defines:
+
+- `init`
+- `build`
+- `dev`
+- `preview`
+
+The CLI dispatches to core and dev crates; it does not parse Markdown or render HTML directly.
 
 ## rustpress-core
 
-Loads config, scans source Markdown, orchestrates rendering, copies public assets, and writes search assets.
+Build pipeline:
+
+- Load and normalize `rustpress.toml`.
+- Reject old `nav` config and require `top_nav`.
+- Scan Markdown from `src_dir`.
+- Compute routes, locales, and translation mapping.
+- Build top navigation, sidebars, and language options.
+- Call Markdown, theme, and search crates.
+- Write HTML, Markdown source files, theme assets, and search assets.
+- Copy `public/` assets.
 
 ## rustpress-md
 
-Parses frontmatter, renders Markdown, generates heading anchors, and extracts search text.
+Markdown processing:
+
+- Parse YAML frontmatter.
+- Enable tables, footnotes, strikethrough, task lists, and heading attributes.
+- Generate heading anchors.
+- Render code blocks, highlight, line numbers, and copy buttons.
+- Special-case Mermaid blocks.
+- Extract search text.
 
 ## rustpress-theme
 
-Renders default HTML and writes CSS and JavaScript runtime assets.
+Default theme:
+
+- Render HTML shell.
+- Render top nav, sidebar, table of contents, and language switcher.
+- Write `rustpress.css` and `rustpress.js`.
+- Provide search UI, color mode switch, access mask, code copy, and Markdown copy.
+- Provide Mermaid theme variables and rerender logic.
 
 ## rustpress-search
 
-Builds the local search index and exposes tokenization helpers.
+Local search index:
+
+- Accept page title, URL, headings, and body.
+- Generate stable page ids.
+- Tokenize English and CJK content.
+- Output JSON index.
+- Keep a wasm placeholder asset.
 
 ## rustpress-dev
 
-Serves static files, watches source files, rebuilds on change, and injects a refresh script in dev mode.
+Development and preview server:
+
+- `preview` serves the built `out_dir`.
+- `dev` builds, watches `src_dir` and the config file, and rebuilds on changes.
+- Injects live reload into HTML.
+- Serves common static content types.
+
+## Data Flow
+
+```text
+rustpress.toml
+docs/**/*.md
+public/**
+    |
+    v
+rustpress-core
+    |
+    +-- rustpress-md      -> page html + headings + search text
+    +-- rustpress-theme   -> full html + css/js
+    +-- rustpress-search  -> search-index.json
+    v
+dist/
+```
+
+This split keeps the CLI, build pipeline, Markdown renderer, theme, search, and dev server independently testable.

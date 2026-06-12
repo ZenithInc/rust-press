@@ -28,7 +28,7 @@ pub fn serve_preview(options: ServeOptions) -> Result<()> {
 }
 
 pub fn serve_dev(options: ServeOptions) -> Result<()> {
-    let build_options = BuildOptions::new(options.config_path.clone());
+    let build_options = BuildOptions::new(options.config_path.clone()).with_base_override("/");
     let result = build_site(build_options.clone())?;
     let root = result.out_dir;
     let config_path = options.config_path.clone();
@@ -44,7 +44,7 @@ pub fn serve_dev(options: ServeOptions) -> Result<()> {
     )?;
     watcher.watch(&config_path, RecursiveMode::NonRecursive)?;
 
-    let rebuild_config_path = config_path.clone();
+    let rebuild_build_options = build_options.clone();
     let rebuild_refresh_version = Arc::clone(&refresh_version);
     thread::spawn(move || {
         let mut last = Instant::now() - Duration::from_secs(2);
@@ -60,7 +60,7 @@ pub fn serve_dev(options: ServeOptions) -> Result<()> {
                 continue;
             }
             last = Instant::now();
-            match build_site(BuildOptions::new(rebuild_config_path.clone())) {
+            match build_site(rebuild_build_options.clone()) {
                 Ok(result) => {
                     rebuild_refresh_version.fetch_add(1, Ordering::SeqCst);
                     eprintln!("rebuilt {} page(s)", result.page_count);

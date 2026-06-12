@@ -8,13 +8,37 @@ access: public
 
 # Installation
 
-The RustPress CLI crate is named `rust-press`, and it installs a `rust-press` binary.
+The CLI package is named `rust-press`, and the installed binary is also `rust-press`.
 
-The repository is prepared for crates.io publication, but `cargo install rust-press` works only after the crate has been published. Until then, install from a source checkout or Git.
+## Requirements
 
-## Source Checkout
+- Rust 1.93 or newer.
+- A shell that can run `cargo`.
+- Static hosting for deployment; the generated site does not need a Rust runtime.
 
-Install the CLI from a local checkout:
+Check your toolchain:
+
+```bash
+rustc --version
+cargo --version
+```
+
+## Install From crates.io
+
+After publishing, install with Cargo:
+
+```bash
+cargo install rust-press
+rust-press --version
+```
+
+Update to the latest release:
+
+```bash
+cargo install rust-press --force
+```
+
+## Install From Source
 
 ```bash
 git clone https://github.com/ZenithInc/rust-press.git
@@ -22,45 +46,57 @@ cd rust-press
 cargo install --path crates/rust-press
 ```
 
-Rust 1.93 or newer is required.
+You can also run without installing:
 
-## Git
+```bash
+cargo run -p rust-press -- --help
+```
 
-Install the latest commit from GitHub:
+## Install From Git
+
+Install the latest main branch:
 
 ```bash
 cargo install --git https://github.com/ZenithInc/rust-press rust-press
 ```
 
-Install a specific release tag by replacing the example version with a tag that exists:
+Install a specific tag:
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.2 rust-press
-```
-
-## crates.io
-
-After the crate is published to crates.io, install it with Cargo:
-
-```bash
-cargo install rust-press
-rust-press --version
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.10 rust-press
 ```
 
 ## Prebuilt Binaries
 
-After release tags are published, GitHub Releases provide prebuilt archives for Linux, macOS, and Windows. Download the archive for your platform, extract it, and place `rust-press` on `PATH`, or run it from the extracted directory:
+Pushing a `v*` tag runs the GitHub Release workflow and builds packages for Linux, macOS, and Windows. Download the archive for your platform, unpack it, and put `rust-press` on your `PATH`.
 
 ```bash
 rust-press --help
 ```
 
-Each release archive is published with a SHA256 checksum file.
+Each archive includes a SHA256 checksum file.
 
-## Updating
-
-After the crate is published, update to the latest Cargo release:
+## Create a Site
 
 ```bash
-cargo install rust-press --force
+rust-press init my-docs
+cd my-docs
+rust-press dev
 ```
+
+`init` creates:
+
+- `rustpress.toml`
+- `docs/index.md`
+- `docs/private.md`
+- `public/.gitkeep`
+
+It refuses to overwrite existing files.
+
+## Build and Deploy
+
+```bash
+rust-press build --config rustpress.toml
+```
+
+The default output directory is `dist/`. Upload that directory to GitHub Pages, Nginx, S3, Cloudflare Pages, or any static hosting provider.

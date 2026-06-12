@@ -8,34 +8,48 @@ access: public
 
 # 테마
 
-기본 테마는 정적 HTML, CSS, 작은 JavaScript runtime으로 구성됩니다.
+RustPress는 내장 기본 테마를 제공합니다. HTML, CSS, 작은 JavaScript 실행 스크립트만 사용하며 프런트엔드 빌드 단계가 필요 없습니다.
+
+## 레이아웃
+
+- sticky 상단 바
+- 상단 드롭다운
+- 왼쪽 사이드바
+- 본문
+- H2/H3 목차
+- 언어 전환
+- 검색 대화상자
+- Light/Dark 전환
+- GitHub 링크
+- Markdown 복사 메뉴
+
+## 내비게이션
+
+`top_nav`는 상단 바를 제어하고 `sidebars`는 왼쪽 사이드바를 제어합니다. `sidebar = "guide"`는 연결만 의미하며 `top_nav.items`를 사이드바에 복사하지 않습니다.
 
 ## 색상 모드
 
-테마는 두 가지 기본 색상 모드를 제공합니다.
+```toml
+[theme]
+skin = "light"
+allow_switch = true
+```
 
-- `light`
-- `dark`
-
-`allow_switch = true`이면 상단 바에 Light/Dark 전환기가 표시되고 선택한 모드가 `localStorage`에 저장됩니다.
+`light`와 `dark`를 지원합니다. 선택 값은 `localStorage`에 저장됩니다.
 
 ## GitHub 링크
-
-`[theme]`에 `github_url`을 설정하면 상단 바 오른쪽에 GitHub 아이콘이 표시됩니다. 아이콘을 클릭하면 설정한 저장소가 열립니다.
 
 ```toml
 [theme]
 github_url = "https://github.com/your-org/your-repo"
 ```
 
-## 레이아웃
+빈 문자열이면 아이콘이 표시되지 않습니다.
 
-생성된 페이지에는 다음이 포함됩니다.
+## 검색과 복사
 
-- sticky 상단 내비게이션
-- 사이드바 내비게이션
-- 반응형 모바일 메뉴
-- 레벨 2 및 레벨 3 제목용 목차
-- 로컬 검색 대화상자
+검색이 활성화되면 상단 바에 검색 버튼이 표시됩니다. `Shift`를 두 번 눌러도 열 수 있습니다. 코드 복사와 Markdown 복사도 테마가 제공합니다.
 
-테마는 프런트엔드 마스크를 보안으로 설명하지 않습니다.
+## 접근 마스크
+
+`access: masked` 페이지에는 프런트엔드 마스크 패널이 표시됩니다. 이것은 보기용 마스크이며 보안 기능이 아닙니다.

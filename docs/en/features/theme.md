@@ -8,34 +8,73 @@ access: public
 
 # Theme
 
-The default theme is static HTML, CSS, and a small JavaScript runtime.
+RustPress currently ships one built-in theme. It is static HTML, CSS, and a small JavaScript runtime; no front-end build step is required.
 
-## Color Modes
+## Layout
 
-The theme exposes two built-in color modes:
+The default page includes:
+
+- sticky top bar
+- top dropdown navigation
+- left sidebar
+- document body
+- H2/H3 table of contents
+- language switcher
+- search dialog
+- Light/Dark switch
+- GitHub link
+- Markdown copy menu
+
+The mobile layout keeps the page readable while collapsing dense navigation.
+
+## Top Nav and Sidebar
+
+The theme renders two independent navigation surfaces:
+
+- `top_nav` for the top bar and dropdowns
+- `sidebars` for the left document navigation
+
+`sidebar = "guide"` binds a top section to a sidebar group. It does not copy `top_nav.items` into the sidebar.
+
+## Color Mode
+
+```toml
+[theme]
+skin = "light"
+allow_switch = true
+```
+
+Supported skins:
 
 - `light`
 - `dark`
 
-When `allow_switch = true`, the top bar shows a Light/Dark switcher and saves the selected mode to `localStorage`.
+When `allow_switch = true`, the user choice is saved in `localStorage`.
 
 ## GitHub Link
-
-Configure `github_url` in `[theme]` to show a GitHub icon on the right side of the top bar. The icon opens the configured repository.
 
 ```toml
 [theme]
 github_url = "https://github.com/your-org/your-repo"
 ```
 
-## Layout
+An empty string hides the icon.
 
-The generated pages include:
+## Search UI
 
-- sticky top navigation
-- sidebar navigation
-- responsive mobile menu
-- table of contents for level 2 and level 3 headings
-- local search dialog
+When `[search].enabled` is true, the theme shows a search button. Pressing `Shift` twice also opens the search dialog.
 
-The theme avoids claiming that front-end masking is security.
+Search reads `assets/search-index.json` in the browser and does not need a server.
+
+## Copy Actions
+
+The theme exposes:
+
+- copy buttons for every code block
+- a Markdown copy menu for every page
+
+Successful copy actions briefly show a completed state.
+
+## Access Mask UI
+
+Pages with `access: masked` show the front-end mask panel. The copy explicitly says the mask is a viewing layer, not security.

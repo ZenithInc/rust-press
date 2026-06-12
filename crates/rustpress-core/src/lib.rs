@@ -17,13 +17,20 @@ use rustpress_theme::{
 #[derive(Debug, Clone)]
 pub struct BuildOptions {
     pub config_path: PathBuf,
+    pub base_override: Option<String>,
 }
 
 impl BuildOptions {
     pub fn new(config_path: impl Into<PathBuf>) -> Self {
         Self {
             config_path: config_path.into(),
+            base_override: None,
         }
+    }
+
+    pub fn with_base_override(mut self, base: impl Into<String>) -> Self {
+        self.base_override = Some(base.into());
+        self
     }
 }
 
@@ -251,15 +258,7 @@ impl Config {
     }
 
     fn normalize(&mut self) -> Result<()> {
-        if self.base.is_empty() {
-            self.base = "/".to_string();
-        }
-        if !self.base.starts_with('/') {
-            self.base.insert(0, '/');
-        }
-        if !self.base.ends_with('/') {
-            self.base.push('/');
-        }
+        normalize_base(&mut self.base);
         self.theme.skin = normalize_theme_skin(&self.theme.skin);
         self.theme.github_url = self.theme.github_url.trim().to_string();
         self.access.password = self.access.password.trim().to_string();
@@ -452,7 +451,11 @@ pub fn build_site(options: BuildOptions) -> Result<BuildResult> {
         .parent()
         .map(Path::to_path_buf)
         .unwrap_or_else(|| PathBuf::from("."));
-    let config = Config::load(&config_path)?;
+    let mut config = Config::load(&config_path)?;
+    if let Some(base_override) = options.base_override {
+        config.base = base_override;
+        normalize_base(&mut config.base);
+    }
     let src_dir = absolutize(&project_root, &config.src_dir);
     let out_dir = absolutize(&project_root, &config.out_dir);
     let public_dir = project_root.join("public");
@@ -1292,6 +1295,18 @@ fn normalize_locale_prefix(key: &str, link: &str) -> Result<String> {
     Ok(link)
 }
 
+fn normalize_base(base: &mut String) {
+    if base.is_empty() {
+        *base = "/".to_string();
+    }
+    if !base.starts_with('/') {
+        base.insert(0, '/');
+    }
+    if !base.ends_with('/') {
+        base.push('/');
+    }
+}
+
 fn normalize_theme_skin(skin: &str) -> String {
     match skin.trim().to_ascii_lowercase().as_str() {
         "dark" => "dark".to_string(),
@@ -1456,6 +1471,47 @@ code_line_numbers = false
             markdown_source_url("/docs/", "/guide/cli/"),
             "/docs/guide/cli/index.md.txt"
         );
+    }
+
+    #[test]
+    fn build_keeps_configured_deployment_base() {
+        let dir = tempfile::tempdir().unwrap();
+        write_base_prefixed_project(dir.path()).unwrap();
+
+        build_site(BuildOptions::new(dir.path().join("rustpress.toml"))).unwrap();
+
+        let html = fs::read_to_string(dir.path().join("dist/index.html")).unwrap();
+        let theme_js = fs::read_to_string(dir.path().join("dist/assets/rustpress.js")).unwrap();
+        let search_index =
+            fs::read_to_string(dir.path().join("dist/assets/search-index.json")).unwrap();
+        assert!(html.contains(r#"href="/action-gateway/assets/rustpress.css""#));
+        assert!(html.contains(r#"src="/action-gateway/assets/rustpress.js""#));
+        assert!(html.contains(r#"href="/action-gateway/guide/""#));
+        assert!(html.contains(r#"data-rp-markdown-source-url="/action-gateway/index.md.txt""#));
+        assert!(theme_js.contains(r#"const base = "/action-gateway/";"#));
+        assert!(search_index.contains(r#""url": "/action-gateway/""#));
+    }
+
+    #[test]
+    fn base_override_renders_local_root_urls() {
+        let dir = tempfile::tempdir().unwrap();
+        write_base_prefixed_project(dir.path()).unwrap();
+
+        build_site(BuildOptions::new(dir.path().join("rustpress.toml")).with_base_override("/"))
+            .unwrap();
+
+        let html = fs::read_to_string(dir.path().join("dist/index.html")).unwrap();
+        let theme_js = fs::read_to_string(dir.path().join("dist/assets/rustpress.js")).unwrap();
+        let search_index =
+            fs::read_to_string(dir.path().join("dist/assets/search-index.json")).unwrap();
+        assert!(html.contains(r#"href="/assets/rustpress.css""#));
+        assert!(html.contains(r#"src="/assets/rustpress.js""#));
+        assert!(html.contains(r#"href="/guide/""#));
+        assert!(html.contains(r#"data-rp-markdown-source-url="/index.md.txt""#));
+        assert!(theme_js.contains(r#"const base = "/";"#));
+        assert!(search_index.contains(r#""url": "/""#));
+        assert!(!html.contains("/action-gateway/assets/"));
+        assert!(!theme_js.contains("/action-gateway/"));
     }
 
     #[test]
@@ -2021,6 +2077,27 @@ text = "Guide"
 link = "guide/"
 "#,
         )?;
+        Ok(())
+    }
+
+    fn write_base_prefixed_project(root: &Path) -> Result<()> {
+        fs::write(
+            root.join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/action-gateway/"
+
+[[top_nav]]
+text = "Guide"
+link = "/guide/"
+
+[search]
+enabled = true
+"#,
+        )?;
+        write_doc(root, "docs/index.md", "Home", "Home")?;
+        write_doc(root, "docs/guide.md", "Guide", "Guide")?;
         Ok(())
     }
 

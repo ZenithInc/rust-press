@@ -8,11 +8,9 @@ access: public
 
 # Markdown Tutorial
 
-This tutorial summarizes common Markdown syntax and the extensions currently enabled by RustPress. The examples can be copied directly into `.md` files under `docs/`.
+RustPress parses Markdown with `pulldown-cmark` and adds handling for code blocks, heading anchors, search text, and Mermaid.
 
 ## Frontmatter
-
-Each page can start with YAML frontmatter to define page metadata such as title, search behavior, and access mode.
 
 ```yaml
 ---
@@ -24,119 +22,92 @@ access: public
 ---
 ```
 
+Common uses:
+
+- Hide a page from search: `search: false`
+- Show the front-end mask: `access: masked`
+- Exclude from generated sidebars: `sidebar: false`
+
 ## Headings
 
-Use `#` for headings. More `#` characters mean a deeper heading level.
-
 ```markdown
-# Heading 1
-## Heading 2
-### Heading 3
-#### Heading 4
+# H1
+## H2
+### H3
 ```
 
-RustPress generates stable anchors for headings, so sections can be linked directly.
-
-## Paragraphs And Line Breaks
-
-Separate text with a blank line to create a new paragraph.
+RustPress generates stable anchors. Duplicate headings get numeric suffixes, and CJK characters are preserved.
 
 ```markdown
-This is the first paragraph.
-
-This is the second paragraph.
+## Configuration
+## Configuration
 ```
 
-To force a line break inside the same paragraph, add two spaces at the end of the line or use `<br>`.
+This creates links similar to `#configuration` and `#configuration-2`.
+
+## Paragraphs and Emphasis
 
 ```markdown
-First line  
-Second line
-```
+First paragraph.
 
-## Emphasis
+Second paragraph.
 
-Use `*` or `_` for italic and bold text. Use `~~` for strikethrough.
-
-```markdown
 *Italic*
-_Italic_
-
 **Bold**
-__Bold__
-
 ***Bold italic***
-
 ~~Strikethrough~~
 ```
 
-## Lists
-
-Use `-`, `*`, or `+` for unordered lists. Use numbers followed by periods for ordered lists.
+## Lists and Tasks
 
 ```markdown
-- First item
-- Second item
-  - Nested item
-  - Nested item
+- Write config
+- Write docs
+  - Feature pages
+  - Config page
 
-1. First step
-2. Second step
-3. Third step
+1. Init project
+2. Build site
+3. Deploy dist
+
+- [x] Generate pages
+- [ ] Publish docs
 ```
 
-## Task Lists
-
-Task lists use `- [ ]` and `- [x]`.
+## Links and Images
 
 ```markdown
-- [x] Finish configuration
-- [ ] Write documentation
-- [ ] Publish the site
-```
-
-## Links And Images
-
-Links use `[text](url)`. Images use `![alt text](url)`.
-
-```markdown
-[Visit the homepage](/)
 [CLI guide](/en/guide/cli/)
+[External link](https://github.com/ZenithInc/rust-press)
 
-![Logo](/images/logo.png)
+![Logo](/logo.png)
 ```
 
-Links and images can also include titles.
+Use root-relative links for site pages. Relative links in locale config are automatically prefixed.
+
+## Tables
 
 ```markdown
-[RustPress](/en/ "Back to homepage")
-![Screenshot](/images/screenshot.png "Page screenshot")
+| Config | Purpose |
+| --- | --- |
+| `top_nav` | Top navigation |
+| `sidebars` | Left sidebar |
+| `locales` | Multilingual routing |
 ```
 
-## Blockquotes
-
-Use `>` for blockquotes. They can span multiple lines and can be nested.
+## Quotes and Footnotes
 
 ```markdown
-> This is a quote.
->
-> A quote can contain multiple paragraphs.
+> The access mask is not authentication.
 
-> Level one
->> Level two
-```
+RustPress supports footnotes.[^note]
 
-## Inline Code
-
-Wrap inline code with backticks.
-
-```markdown
-Run `rust-press build` to generate the static site.
+[^note]: Footnotes are rendered near the end of the page.
 ```
 
 ## Code Blocks
 
-Use three backticks for code blocks. Add a language name to enable syntax highlighting.
+Add a language name for highlighting and a visible language label.
 
 ````markdown
 ```bash
@@ -150,84 +121,48 @@ fn main() {
 ```
 ````
 
-## Tables
+Code blocks show line numbers and copy buttons by default:
 
-Use pipes to separate columns. The second row defines the header separator.
-
-```markdown
-| Syntax | Purpose |
-| --- | --- |
-| `#` | Heading |
-| `-` | Unordered list |
-| `` `code` `` | Inline code |
+```toml
+[markdown]
+code_line_numbers = false
 ```
 
-Use colons to control alignment.
+## Mermaid
 
-```markdown
-| Left | Center | Right |
-| :--- | :---: | ---: |
-| A | B | C |
-```
-
-## Footnotes
-
-Footnotes use `[^name]` markers and matching definitions elsewhere in the document.
-
-```markdown
-RustPress supports footnotes.[^note]
-
-[^note]: This is the footnote content.
-```
-
-## Heading Attributes
-
-Headings can define custom attributes. The most common use is a custom `id`.
-
-```markdown
-## Install {#install}
-```
-
-This allows links such as `/en/guide/markdown-tutorial/#install`.
-
-## Mermaid Diagrams
-
-Code blocks with the `mermaid` language are rendered as diagrams.
+`mermaid` fences render as diagrams:
 
 ````markdown
 ```mermaid
 flowchart LR
-    A[Write Markdown] --> B[Build]
-    B --> C[Generate HTML]
+    A[Write Markdown] --> B[Run rust-press build]
+    B --> C[Generate dist]
 ```
 ````
 
-## Horizontal Rules
+```mermaid
+flowchart LR
+    A[Write Markdown] --> B[Run rust-press build]
+    B --> C[Generate dist]
+```
 
-Use three or more `-`, `*`, or `_` characters to create a horizontal rule.
+## Heading Attributes
 
 ```markdown
----
-***
-___
+## Installation {#install}
 ```
 
-## Escaping Characters
+Then link to `/en/guide/markdown-tutorial/#install`.
 
-Prefix Markdown control characters with a backslash to display them literally.
+## Markdown Source Copy
 
-```markdown
-\# This is not a heading
-\* This is not a list
-\[This is not a link\](https://example.com)
-```
+RustPress writes `index.md.txt` for every page. The theme exposes:
 
-## HTML
+- Copy Markdown
+- Copy Markdown URL
 
-Small amounts of HTML can be written directly in Markdown. Prefer it only when Markdown cannot express the content.
+This is useful for review, automation, and external tools.
 
-```html
-<kbd>Shift</kbd>
-<br>
-<span class="custom">Custom content</span>
-```
+## Search Text
+
+Search text comes from Markdown content. Code blocks are excluded by default; set `index_code = true` to index them.

@@ -8,53 +8,133 @@ access: public
 
 # Configuration
 
-RustPress uses `rustpress.toml` instead of VitePress project conventions.
+RustPress uses `rustpress.toml` for the site, navigation, theme, search, locales, and access mask. The config file directory is the project root for relative paths.
 
-## Example
+## Minimal Config
 
 ```toml
 title = "My Docs"
 src_dir = "docs"
 out_dir = "dist"
 base = "/"
+```
 
+| Field | Meaning |
+| --- | --- |
+| `title` | Site title and page title suffix |
+| `src_dir` | Markdown source directory |
+| `out_dir` | Static output directory, cleaned before each build |
+| `base` | Deployment path prefix, such as `/rust-press/` for GitHub Pages project sites |
+
+`base` is normalized to start and end with `/`.
+
+## Top Navigation
+
+`top_nav` controls only the top bar. It can be a direct link or a dropdown group.
+
+```toml
 [[top_nav]]
 text = "Guide"
-link = "/guide/installation/"
+link = "/guide/cli/"
+sidebar = "guide"
 
 [[top_nav.items]]
 text = "Quick Start"
 link = "/guide/installation/"
 
 [[top_nav.items]]
+text = "Site Config"
+link = "/guide/configuration/"
+```
+
+| Field | Meaning |
+| --- | --- |
+| `text` | Visible label |
+| `link` | Top-level entry link; omit it for a dropdown-only trigger |
+| `sidebar` | Binds this top section to a sidebar group |
+| `items` | Top dropdown links only |
+
+The old `nav` key has been removed. `[[nav]]` and `[[locales.en.nav]]` fail during config loading; use `[[top_nav]]` and `[[locales.en.top_nav]]`.
+
+## Sidebars
+
+`sidebars.<id>` controls the left sidebar. It does not reuse `top_nav.items`.
+
+```toml
+[[sidebars.guide]]
+text = "Guide"
+link = "/guide/cli/"
+
+[[sidebars.guide.items]]
+text = "CLI"
+link = "/guide/cli/"
+
+[[sidebars.guide.items]]
+text = "Installation"
+link = "/guide/installation/"
+
+[[sidebars.guide.items]]
 text = "Configuration"
 link = "/guide/configuration/"
+```
 
-[theme]
-name = "default"
-skin = "light"
-allow_switch = true
-github_url = "https://github.com/your-org/your-repo"
+`sidebar = "guide"` on a top navigation item only connects that top section to `sidebars.guide`. A page that appears only in `top_nav.items` and not in `sidebars.guide.items` will not be added to the left sidebar.
 
+If no `sidebars` are configured, RustPress builds a sidebar from Markdown paths and uses top-level `top_nav` entries to help order groups.
+
+## Markdown
+
+```toml
 [markdown]
 mermaid = true
 code_highlight = true
 code_line_numbers = true
 heading_anchors = true
+```
 
+| Field | Default | Effect |
+| --- | --- | --- |
+| `mermaid` | `true` | Render `mermaid` code fences as diagrams |
+| `code_highlight` | `true` | Highlight code with syntect |
+| `code_line_numbers` | `true` | Show line numbers |
+| `heading_anchors` | `true` | Add stable heading anchors |
+
+## Search
+
+```toml
 [search]
 enabled = true
 languages = ["zh", "en", "ja", "ko"]
 index_code = false
+```
 
+`enabled = true` writes the local search index. `index_code = false` excludes code blocks from search text. Use `search: false` in page frontmatter to exclude one page.
+
+## Theme
+
+```toml
+[theme]
+name = "default"
+skin = "light"
+allow_switch = true
+github_url = "https://github.com/your-org/your-repo"
+```
+
+The current implementation uses the built-in default theme. `skin` supports `light` and `dark`; other values fall back to `light`. `allow_switch = true` shows the color mode switcher. `github_url` shows a GitHub icon in the top bar.
+
+## Access Mask
+
+```toml
 [access]
 enabled = true
 mode = "mask"
-password = "demo123"
+password = "rustpress"
 password_hint = "Enter password"
 ```
 
-## Frontmatter
+When access masking is enabled and a page uses `access: masked`, the page shows a front-end password overlay. It is not a security boundary; the HTML still exists in the static output.
+
+## Page Frontmatter
 
 ```yaml
 ---
@@ -66,109 +146,50 @@ access: public
 ---
 ```
 
-`access` can be `public` or `masked`. Masked pages show the access overlay only when `[access].password` is configured. `search: false` excludes the page from the generated search index.
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `title` | First heading or `Untitled` | Page title |
+| `layout` | `doc` | Current theme document layout |
+| `sidebar` | `true` | Include in generated sidebars when no explicit sidebars exist |
+| `search` | `true` | Include in search index |
+| `access` | `public` | `public` or `masked` |
 
-## Top Navigation and Sidebars
-
-Use `[[top_nav]]` to render top navigation links or grouped menus.
-
-```toml
-[[top_nav]]
-text = "Guide"
-link = "/guide/installation/"
-sidebar = "guide"
-
-[[top_nav.items]]
-text = "Quick Start"
-link = "/guide/installation/"
-
-[[top_nav.items]]
-text = "Markdown"
-link = "/guide/markdown-tutorial/"
-
-[[top_nav]]
-text = "Reference"
-link = "/internals/crates/"
-sidebar = "reference"
-
-[[sidebars.guide]]
-text = "Guide"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "Installation"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "Configuration"
-link = "/guide/configuration/"
-
-[[sidebars.reference]]
-text = "Reference"
-link = "/internals/crates/"
-
-[[sidebars.reference.items]]
-text = "Crates"
-link = "/internals/crates/"
-```
-
-`top_nav.items` only controls the top dropdown menu. When `items` are omitted, the item renders as a direct top-level link.
-
-`sidebars.<name>.items` controls the left sidebar. Add `sidebar = "name"` to a top navigation item to bind that top-level section to `sidebars.name`; it does not reuse `top_nav.items` as sidebar entries. A page that appears only in `top_nav.items` and not in `sidebars.<name>.items` will not be added to the left sidebar.
+Invalid `access` values normalize to `public`.
 
 ## Multilingual Docs
 
-RustPress is single-language by default. Add `locales` to opt in to URL-based multilingual docs. When `locales` is configured, `locales.root` is required and represents the default language at `/`.
+When `locales` is configured, `locales.root` is required. Root files live directly under `docs/`; other locales live under `docs/<locale>/`.
 
 ```toml
 [locales.root]
 label = "简体中文"
 lang = "zh-CN"
+title = "中文文档"
 
 [locales.en]
 label = "English"
 lang = "en-US"
 link = "/en/"
-
-[locales.ja]
-label = "日本語"
-lang = "ja-JP"
-link = "/ja/"
-
-[locales.ko]
-label = "한국어"
-lang = "ko-KR"
-link = "/ko/"
+title = "English Docs"
 
 [[locales.en.top_nav]]
 text = "Guide"
-link = "guide/installation/"
+link = "guide/cli/"
 sidebar = "guide"
-
-[[locales.en.top_nav.items]]
-text = "Quick Start"
-link = "guide/installation/"
 
 [[locales.en.sidebars.guide]]
 text = "Guide"
-link = "guide/installation/"
-
-[[locales.en.sidebars.guide.items]]
-text = "Installation"
-link = "guide/installation/"
+link = "guide/cli/"
 ```
 
-The root language keeps using files directly under `docs/`. Other locale files live in `docs/<locale>/`.
+Relative locale links are resolved under the locale prefix. `guide/cli/` in `locales.en.top_nav` becomes `/en/guide/cli/`.
+
+The language switcher links to the matching translated page when it exists. If a translation is missing, it falls back to that locale's home page.
+
+## Static Assets
+
+Files in `public/` are copied to `out_dir`.
 
 ```text
-docs/index.md              -> /
-docs/guide/cli.md          -> /guide/cli/
-docs/en/index.md           -> /en/
-docs/en/guide/cli.md       -> /en/guide/cli/
-docs/ja/index.md           -> /ja/
-docs/ko/index.md           -> /ko/
+public/logo.png -> dist/logo.png
 ```
-
-Non-root locale links default to `/<locale>/`; use `link` to override that prefix. Locale `top_nav`, `sidebars`, and `title` override the global values, and fall back to global config when omitted. Relative locale top navigation and sidebar links are resolved under that locale prefix, so `guide/installation/` in `locales.en.top_nav` or `locales.en.sidebars.guide` becomes `/en/guide/installation/`.
-
-The language selector appears in the top bar only when `locales` is configured. It switches to the matching translated page when one exists. If a translation is missing, it links to that language's home page.

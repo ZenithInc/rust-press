@@ -8,11 +8,11 @@ access: public
 
 # Markdown 教程
 
-这篇教程汇总常用 Markdown 语法，以及 RustPress 当前启用的扩展语法。示例可以直接复制到 `docs/` 下的 `.md` 文件中使用。
+RustPress 使用 `pulldown-cmark` 解析 Markdown，并额外处理代码块、标题锚点、搜索文本和 Mermaid。这个页面可以当作写作速查表。
 
 ## Frontmatter
 
-每篇文档可以在文件顶部写 YAML frontmatter，用来声明标题、搜索、访问方式等页面元数据。
+每个 `.md` 文件都可以在开头写 YAML frontmatter。
 
 ```yaml
 ---
@@ -24,119 +24,92 @@ access: public
 ---
 ```
 
-## 标题
+常用写法：
 
-使用 `#` 表示标题层级，`#` 越多层级越深。
+- 想隐藏某页搜索结果：`search: false`
+- 想让页面显示访问遮罩：`access: masked`
+- 想在自动侧栏模式下排除某页：`sidebar: false`
+
+## 标题
 
 ```markdown
 # 一级标题
 ## 二级标题
 ### 三级标题
-#### 四级标题
 ```
 
-RustPress 会为标题生成稳定锚点，例如 `## Markdown 教程` 会生成可跳转的标题链接。
+RustPress 会为标题生成稳定锚点。重复标题会自动追加序号，中文、日文、韩文等非 ASCII 标题会保留在锚点里。
 
-## 段落和换行
+```markdown
+## 配置
+## 配置
+```
 
-普通文本之间空一行会形成新的段落。
+会得到类似 `#配置` 和 `#配置-2` 的链接。
+
+## 段落和强调
 
 ```markdown
 这是第一段。
 
 这是第二段。
-```
 
-如果只想在同一段内换行，可以在行尾添加两个空格，或直接使用 HTML 的 `<br>`。
-
-```markdown
-第一行  
-第二行
-```
-
-## 强调
-
-使用 `*` 或 `_` 表示斜体和加粗，使用 `~~` 表示删除线。
-
-```markdown
 *斜体*
-_斜体_
-
 **加粗**
-__加粗__
-
 ***加粗斜体***
-
 ~~删除线~~
 ```
 
-## 列表
-
-无序列表使用 `-`、`*` 或 `+`，有序列表使用数字加点号。
+## 列表和任务
 
 ```markdown
-- 第一项
-- 第二项
-  - 子项
-  - 子项
+- 写配置
+- 写文档
+  - 写功能页
+  - 写配置页
 
-1. 第一步
-2. 第二步
-3. 第三步
-```
+1. 初始化项目
+2. 构建站点
+3. 部署 dist
 
-## 任务列表
-
-任务列表使用 `- [ ]` 和 `- [x]`。
-
-```markdown
-- [x] 完成配置
-- [ ] 编写文档
-- [ ] 发布站点
+- [x] 生成页面
+- [ ] 发布文档
 ```
 
 ## 链接和图片
 
-链接使用 `[文字](地址)`，图片使用 `![替代文本](地址)`。
-
 ```markdown
-[访问首页](/)
 [命令行指南](/guide/cli/)
+[外部链接](https://github.com/ZenithInc/rust-press)
 
-![Logo](/images/logo.png)
+![Logo](/logo.png)
 ```
 
-也可以给链接和图片加标题。
+站内链接建议使用以 `/` 开头的绝对路径。多语言配置中的相对链接会自动加上 locale 前缀。
+
+## 表格
 
 ```markdown
-[RustPress](/ "返回首页")
-![截图](/images/screenshot.png "页面截图")
+| 配置 | 用途 |
+| --- | --- |
+| `top_nav` | 顶部导航 |
+| `sidebars` | 左侧侧边栏 |
+| `locales` | 多语言 |
 ```
 
-## 引用
-
-引用使用 `>`，可以连续写多行，也可以嵌套。
+## 引用和脚注
 
 ```markdown
-> 这是引用内容。
->
-> 引用可以包含多段文字。
+> 访问遮罩不是认证系统，只是前端显示层。
 
-> 一级引用
->> 二级引用
-```
+RustPress 支持脚注。[^note]
 
-## 行内代码
-
-行内代码使用反引号包裹。
-
-```markdown
-运行 `rust-press build` 生成静态站点。
+[^note]: 脚注会出现在文档末尾。
 ```
 
 ## 代码块
 
-代码块使用三个反引号，并建议写上语言名以启用高亮。
+写上语言名可以启用高亮，并在代码块顶部显示语言标签。
 
 ````markdown
 ```bash
@@ -150,84 +123,50 @@ fn main() {
 ```
 ````
 
-## 表格
+代码块默认显示行号和复制按钮。可以在配置中关闭行号：
 
-表格使用竖线分隔列，第二行的 `---` 定义表头。
-
-```markdown
-| 语法 | 用途 |
-| --- | --- |
-| `#` | 标题 |
-| `-` | 无序列表 |
-| `` `code` `` | 行内代码 |
+```toml
+[markdown]
+code_line_numbers = false
 ```
 
-可以用冒号控制对齐方式。
+## Mermaid
 
-```markdown
-| 左对齐 | 居中 | 右对齐 |
-| :--- | :---: | ---: |
-| A | B | C |
+`mermaid` 代码块会在浏览器中渲染为图：
+
+````markdown
+```mermaid
+flowchart LR
+    A[写 Markdown] --> B[运行 rust-press build]
+    B --> C[生成 dist]
 ```
+````
 
-## 脚注
-
-脚注使用 `[^name]` 标记，并在文档其他位置定义内容。
-
-```markdown
-RustPress 支持脚注。[^note]
-
-[^note]: 这是脚注内容。
+```mermaid
+flowchart LR
+    A[写 Markdown] --> B[运行 rust-press build]
+    B --> C[生成 dist]
 ```
 
 ## 标题属性
 
-可以给标题指定自定义属性。最常见的是自定义 `id`。
+启用的 Markdown 扩展支持标题属性：
 
 ```markdown
 ## 安装 {#install}
 ```
 
-这样可以使用 `/guide/markdown-tutorial/#install` 跳转到该标题。
+这样可以使用 `/guide/markdown-tutorial/#install` 跳到该标题。
 
-## Mermaid 图
+## 原始 Markdown 复制
 
-语言为 `mermaid` 的代码块会渲染为图示。
+RustPress 会为每个页面写入 `index.md.txt`。主题右下角提供两个动作：
 
-````markdown
-```mermaid
-flowchart LR
-    A[编写 Markdown] --> B[构建]
-    B --> C[生成 HTML]
-```
-````
+- 复制当前页面 Markdown。
+- 复制当前页面 Markdown URL。
 
-## 分隔线
+这适合把文档内容交给其他工具处理，或快速分享源码格式。
 
-使用三个或更多 `-`、`*` 或 `_` 可以生成分隔线。
+## 搜索文本
 
-```markdown
----
-***
-___
-```
-
-## 转义字符
-
-如果需要显示 Markdown 保留字符本身，可以在前面加反斜杠。
-
-```markdown
-\# 这不是标题
-\* 这不是列表
-\[这不是链接\](https://example.com)
-```
-
-## HTML
-
-Markdown 中可以直接写少量 HTML。建议只在 Markdown 语法无法表达时使用。
-
-```html
-<kbd>Shift</kbd>
-<br>
-<span class="custom">自定义内容</span>
-```
+搜索文本来自 Markdown 正文。默认情况下代码块不会进入搜索正文；设置 `index_code = true` 后代码也会被索引。

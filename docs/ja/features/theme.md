@@ -8,34 +8,48 @@ access: public
 
 # テーマ
 
-デフォルトテーマは、静的 HTML、CSS、小さな JavaScript runtime で構成されています。
+RustPress は組み込みテーマを提供します。HTML、CSS、小さな JavaScript 実行時スクリプトだけで動作し、フロントエンドのビルドは不要です。
 
-## カラーモード
+## レイアウト
 
-テーマには 2 つの組み込みカラーモードがあります。
+- sticky トップバー
+- トップドロップダウン
+- 左サイドバー
+- 本文
+- H2/H3 目次
+- 言語切替
+- 検索ダイアログ
+- Light/Dark 切替
+- GitHub リンク
+- Markdown コピー menu
 
-- `light`
-- `dark`
+## ナビゲーション
 
-`allow_switch = true` の場合、トップバーに Light/Dark 切り替えが表示され、選択したモードが `localStorage` に保存されます。
+`top_nav` はトップバー、`sidebars` は左サイドバーを制御します。`sidebar = "guide"` は関連付けだけで、`top_nav.items` をサイドバーにコピーしません。
+
+## 色モード
+
+```toml
+[theme]
+skin = "light"
+allow_switch = true
+```
+
+`light` と `dark` をサポートします。切替結果は `localStorage` に保存されます。
 
 ## GitHub リンク
-
-`[theme]` に `github_url` を設定すると、トップバー右側に GitHub アイコンが表示されます。アイコンをクリックすると、設定したリポジトリを開きます。
 
 ```toml
 [theme]
 github_url = "https://github.com/your-org/your-repo"
 ```
 
-## レイアウト
+空文字ならアイコンは表示されません。
 
-生成されるページには次のものが含まれます。
+## 検索とコピー
 
-- sticky トップナビゲーション
-- サイドバーナビゲーション
-- レスポンシブなモバイルメニュー
-- レベル 2 とレベル 3 の見出し用目次
-- ローカル検索ダイアログ
+検索が有効な場合、トップバーに検索ボタンが表示されます。`Shift` を 2 回押しても開けます。コードコピーと Markdown コピーもテーマが提供します。
 
-テーマはフロントエンドマスクをセキュリティとして説明しません。
+## アクセスマスク
+
+`access: masked` ページにはフロントエンドのマスクパネルが表示されます。これは閲覧用の遮蔽であり、セキュリティではありません。

@@ -8,51 +8,105 @@ access: public
 
 # 設定
 
-RustPress は VitePress のプロジェクト規約ではなく、`rustpress.toml` を使用します。
+RustPress は `rustpress.toml` でサイト、ナビゲーション、テーマ、検索、多言語、アクセスマスクを設定します。設定ファイルの場所がプロジェクトルートです。
 
-## 例
+## 最小設定
 
 ```toml
 title = "My Docs"
 src_dir = "docs"
 out_dir = "dist"
 base = "/"
+```
 
+| 項目 | 説明 |
+| --- | --- |
+| `title` | サイトタイトル |
+| `src_dir` | Markdown ソースディレクトリ |
+| `out_dir` | 静的出力先。ビルド前に削除される |
+| `base` | デプロイ先のパス接頭辞 |
+
+## トップナビ
+
+`top_nav` はトップバーだけを制御します。
+
+```toml
 [[top_nav]]
 text = "ガイド"
-link = "/guide/installation/"
+link = "/guide/cli/"
+sidebar = "guide"
 
 [[top_nav.items]]
 text = "クイックスタート"
 link = "/guide/installation/"
+```
 
-[[top_nav.items]]
-text = "設定"
-link = "/guide/configuration/"
+`sidebar = "guide"` はトップセクションを `sidebars.guide` に関連付けるだけです。`top_nav.items` はサイドバーには再利用されません。旧 `nav` 設定は無効です。
 
-[theme]
-name = "default"
-skin = "light"
-allow_switch = true
-github_url = "https://github.com/your-org/your-repo"
+## サイドバー
 
+```toml
+[[sidebars.guide]]
+text = "ガイド"
+link = "/guide/cli/"
+
+[[sidebars.guide.items]]
+text = "CLI"
+link = "/guide/cli/"
+
+[[sidebars.guide.items]]
+text = "インストール"
+link = "/guide/installation/"
+```
+
+`sidebars.<id>.items` が左側サイドバーを決めます。明示的な `sidebars` がない場合、Markdown のパスから自動生成されます。
+
+## Markdown
+
+```toml
 [markdown]
 mermaid = true
 code_highlight = true
 code_line_numbers = true
 heading_anchors = true
+```
 
+Mermaid、コードハイライト、行番号、見出しアンカーを制御します。
+
+## 検索
+
+```toml
 [search]
 enabled = true
 languages = ["zh", "en", "ja", "ko"]
 index_code = false
+```
 
+`search: false` を frontmatter に書くと、そのページだけ検索から除外できます。
+
+## テーマ
+
+```toml
+[theme]
+name = "default"
+skin = "light"
+allow_switch = true
+github_url = "https://github.com/your-org/your-repo"
+```
+
+`skin` は `light` または `dark`。`allow_switch` で切替ボタンを表示します。
+
+## アクセスマスク
+
+```toml
 [access]
 enabled = true
 mode = "mask"
-password = "demo123"
+password = "rustpress"
 password_hint = "Enter password"
 ```
+
+ページ側で `access: masked` を指定するとフロントエンドのマスクが表示されます。これはセキュリティ機構ではありません。
 
 ## Frontmatter
 
@@ -66,59 +120,17 @@ access: public
 ---
 ```
 
-`access` は `public` または `masked` にできます。`[access].password` が設定されている場合のみ、`masked` ページにアクセスマスクが表示されます。`search: false` を指定すると、そのページは生成される検索インデックスから除外されます。
-
-## トップナビゲーションとサイドバー
-
-`[[top_nav]]` を使ってトップナビゲーションリンクまたはグループメニューを表示します。
-
-```toml
-[[top_nav]]
-text = "ガイド"
-link = "/guide/installation/"
-sidebar = "guide"
-
-[[top_nav.items]]
-text = "クイックスタート"
-link = "/guide/installation/"
-
-[[top_nav.items]]
-text = "Markdown"
-link = "/guide/markdown-tutorial/"
-
-[[top_nav]]
-text = "リファレンス"
-link = "/internals/crates/"
-sidebar = "reference"
-
-[[sidebars.guide]]
-text = "ガイド"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "インストール"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "設定"
-link = "/guide/configuration/"
-
-[[sidebars.reference]]
-text = "リファレンス"
-link = "/internals/crates/"
-
-[[sidebars.reference.items]]
-text = "Crates"
-link = "/internals/crates/"
-```
-
-`top_nav.items` はトップのドロップダウンメニューだけを制御します。`items` が省略された場合、その項目は直接のトップレベルリンクとしてレンダリングされます。
-
-`sidebars.<name>.items` は左側サイドバーを制御します。トップナビゲーション項目に `sidebar = "name"` を追加すると、そのトップレベルセクションを `sidebars.name` に紐づけます。`top_nav.items` がサイドバー項目として再利用されることはありません。`top_nav.items` にのみあり、`sidebars.<name>.items` にないページは左側サイドバーには追加されません。
+| 項目 | 既定 | 説明 |
+| --- | --- | --- |
+| `title` | 最初の見出しまたは `Untitled` | ページタイトル |
+| `layout` | `doc` | 文書レイアウト |
+| `sidebar` | `true` | 自動サイドバーに含めるか |
+| `search` | `true` | 検索に含めるか |
+| `access` | `public` | `public` または `masked` |
 
 ## 多言語ドキュメント
 
-RustPress はデフォルトでは単一言語です。`locales` を追加すると、URL ベースの多言語ドキュメントが有効になります。`locales` を設定する場合、`locales.root` は必須で、`/` にあるデフォルト言語を表します。
+`locales` を設定する場合、`locales.root` が必要です。root は `docs/`、他の言語は `docs/<locale>/` に置きます。
 
 ```toml
 [locales.root]
@@ -130,45 +142,14 @@ label = "English"
 lang = "en-US"
 link = "/en/"
 
-[locales.ja]
-label = "日本語"
-lang = "ja-JP"
-link = "/ja/"
-
-[locales.ko]
-label = "한국어"
-lang = "ko-KR"
-link = "/ko/"
-
 [[locales.en.top_nav]]
 text = "Guide"
-link = "guide/installation/"
+link = "guide/cli/"
 sidebar = "guide"
-
-[[locales.en.top_nav.items]]
-text = "Quick Start"
-link = "guide/installation/"
-
-[[locales.en.sidebars.guide]]
-text = "Guide"
-link = "guide/installation/"
-
-[[locales.en.sidebars.guide.items]]
-text = "Installation"
-link = "guide/installation/"
 ```
 
-ルート言語は引き続き `docs/` 直下のファイルを使用します。その他の言語ファイルは `docs/<locale>/` に配置します。
+locale 内の相対リンクは locale 接頭辞の下に解決されます。
 
-```text
-docs/index.md              -> /
-docs/guide/cli.md          -> /guide/cli/
-docs/en/index.md           -> /en/
-docs/en/guide/cli.md       -> /en/guide/cli/
-docs/ja/index.md           -> /ja/
-docs/ko/index.md           -> /ko/
-```
+## 静的資産
 
-root 以外の言語リンクはデフォルトで `/<locale>/` になります。`link` でこのプレフィックスを上書きできます。Locale の `top_nav`、`sidebars`、`title` はグローバル値を上書きし、省略時はグローバル設定にフォールバックします。Locale のトップナビゲーションとサイドバー内の相対リンクは、その言語プレフィックスの下に解決されます。たとえば `locales.en.top_nav` または `locales.en.sidebars.guide` の `guide/installation/` は `/en/guide/installation/` になります。
-
-言語セレクターは `locales` が設定されている場合にのみトップバーに表示されます。言語を切り替えると対応する翻訳ページに移動します。対象言語にそのページがない場合は、その言語のホームページに移動します。
+`public/` の内容は `out_dir` にコピーされます。

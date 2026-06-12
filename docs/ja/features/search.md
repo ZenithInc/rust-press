@@ -8,20 +8,55 @@ access: public
 
 # 検索
 
-RustPress はビルド時にローカル検索インデックスを書き込みます。
+RustPress の検索は完全にローカルです。ビルド時に索引を作成し、ブラウザが JSON を読んで検索します。
+
+## 有効化
+
+```toml
+[search]
+enabled = true
+languages = ["zh", "en", "ja", "ko"]
+index_code = false
+```
+
+`enabled = false` なら検索入口と索引生成を無効化します。
 
 ## 出力ファイル
 
-- `dist/assets/search-index.json`
-- `dist/assets/search-index.json.br`
-- `dist/assets/rustpress_search_bg.wasm`
+```text
+dist/assets/search-index.json
+dist/assets/search-index.json.br
+dist/assets/rustpress_search_bg.wasm
+```
 
-現在の runtime は JavaScript fallback を使って JSON インデックスを検索します。WASM ファイルは MVP の出力契約を保つために存在します。
+現在の実行時スクリプトは JSON 索引を検索します。
 
-## English
+## ページ単位の制御
 
-英語 token は大文字小文字を区別せずに一致します。`BUILD`、`build`、`search` を検索してみてください。
+```yaml
+---
+title: Internal Note
+search: false
+---
+```
 
-## 中国語検索
+ページは通常通り表示されますが、検索索引には入りません。
 
-中国語コンテンツは文字 token としてインデックスに入ります。`搜索`、`中文`、`访问遮罩` を検索してローカル検索結果を確認できます。
+## コード索引
+
+既定ではコードブロックは索引に入りません。
+
+```toml
+[search]
+index_code = false
+```
+
+API 文書やコード例中心の文書では `true` にできます。
+
+## 分かち書き
+
+英語は大小文字を無視し、軽い語幹処理を行います。CJK は文字単位の token で中国語、日本語、韓国語の検索を扱います。
+
+## 使い方
+
+検索ボタンまたは `Shift` 2 回で検索ダイアログを開きます。クエリは外部サービスに送信されません。

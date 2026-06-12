@@ -8,13 +8,33 @@ access: public
 
 # 설치
 
-RustPress CLI crate 이름은 `rust-press`이며, 설치되는 바이너리 이름도 `rust-press`입니다.
+CLI 패키지 이름은 `rust-press`이고 실행 파일 이름도 `rust-press`입니다.
 
-이 저장소는 crates.io 게시를 준비했지만, `cargo install rust-press`는 crate가 게시된 뒤에만 동작합니다. 그전에는 소스 checkout 또는 Git에서 설치하세요.
+## 요구 사항
 
-## 소스 checkout
+- Rust 1.93 이상
+- `cargo`를 실행할 수 있는 shell
+- 배포 시에는 정적 호스팅만 필요하며 Rust 런타임은 필요하지 않음
 
-로컬 checkout에서 CLI를 설치할 수 있습니다.
+```bash
+rustc --version
+cargo --version
+```
+
+## crates.io 설치
+
+```bash
+cargo install rust-press
+rust-press --version
+```
+
+업데이트:
+
+```bash
+cargo install rust-press --force
+```
+
+## 소스에서 설치
 
 ```bash
 git clone https://github.com/ZenithInc/rust-press.git
@@ -22,45 +42,38 @@ cd rust-press
 cargo install --path crates/rust-press
 ```
 
-Rust 1.93 이상이 필요합니다.
+설치하지 않고 실행할 수도 있습니다.
 
-## Git
+```bash
+cargo run -p rust-press -- --help
+```
 
-GitHub의 최신 커밋에서 설치합니다.
+## Git에서 설치
 
 ```bash
 cargo install --git https://github.com/ZenithInc/rust-press rust-press
 ```
 
-특정 릴리스 태그를 설치하려면 실제 존재하는 tag로 바꾸세요.
+특정 tag:
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.2 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.10 rust-press
 ```
 
-## crates.io
-
-crates.io에 게시된 뒤에는 Cargo로 설치할 수 있습니다.
+## 첫 사이트 만들기
 
 ```bash
-cargo install rust-press
-rust-press --version
+rust-press init my-docs
+cd my-docs
+rust-press dev
 ```
 
-## 사전 빌드 바이너리
+`init`은 `rustpress.toml`, `docs/index.md`, `docs/private.md`, `public/.gitkeep`을 만듭니다. 기존 파일은 덮어쓰지 않습니다.
 
-릴리스 tag가 게시된 뒤에는 GitHub Releases가 Linux, macOS, Windows용 사전 빌드 아카이브를 제공합니다. 플랫폼에 맞는 아카이브를 다운로드해 압축을 풀고 `rust-press`를 `PATH`에 두거나, 압축을 푼 디렉터리에서 직접 실행합니다.
+## 빌드와 배포
 
 ```bash
-rust-press --help
+rust-press build --config rustpress.toml
 ```
 
-각 릴리스 아카이브에는 SHA256 체크섬 파일도 함께 게시됩니다.
-
-## 업데이트
-
-crate 게시 후에는 최신 Cargo 릴리스로 업데이트할 수 있습니다.
-
-```bash
-cargo install rust-press --force
-```
+기본 출력 디렉터리는 `dist/`입니다. 이 디렉터리를 GitHub Pages, Nginx, S3, Cloudflare Pages 등 정적 호스팅에 업로드합니다.

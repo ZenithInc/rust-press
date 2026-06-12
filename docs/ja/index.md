@@ -8,32 +8,59 @@ access: public
 
 # RustPress
 
-RustPress は Rust-first の静的ドキュメントジェネレーター MVP です。`rustpress.toml` を読み込み、`docs/` の Markdown をスキャンし、静的 HTML をレンダリングし、テーマアセットを書き込み、ローカル検索インデックスを構築します。
+RustPress は Rust-first の静的ドキュメントジェネレーターです。`rustpress.toml` を読み込み、`docs/` の Markdown を静的 HTML に変換し、テーマ資産、ローカル検索インデックス、コピー可能な Markdown ソースを生成します。
 
-## 現在の MVP
+## できること
 
-- `rust-press init [dir]` は最小構成のドキュメントプロジェクトを作成します。
-- `rust-press build` は Markdown を `dist/` にレンダリングします。
-- `rust-press dev` は Markdown または設定ファイルが変更されたときに再ビルドします。
-- `rust-press preview` は生成済みの静的出力を配信します。
-- デフォルトテーマには、Light/Dark 切り替え、ローカル検索、Mermaid レンダリング、サイドバーナビゲーション、フロントエンドのアクセスマスクが含まれます。
+| 機能 | 内容 | 詳細 |
+| --- | --- | --- |
+| CLI | 初期化、ビルド、開発サーバー、プレビュー | [CLI](/ja/guide/cli/) |
+| 設定 | `top_nav`、`sidebars`、`locales`、テーマ、検索、アクセスマスク | [設定](/ja/guide/configuration/) |
+| Markdown | 表、タスクリスト、脚注、コードハイライト、行番号、コピー | [Markdown](/ja/features/markdown/) |
+| Mermaid | `mermaid` コードブロックを図として表示 | [Markdown チュートリアル](/ja/guide/markdown-tutorial/) |
+| テーマ | トップナビ、サイドバー、目次、Light/Dark、GitHub リンク | [テーマ](/ja/features/theme/) |
+| 検索 | JSON ベースのローカル検索、英語と CJK 対応 | [検索](/ja/features/search/) |
+| 多言語 | `docs/<locale>/`、言語切替、翻訳フォールバック | [設定](/ja/guide/configuration/#多言語ドキュメント) |
+| アクセスマスク | `access: masked` ページにフロントエンドのパスワードマスクを表示 | [アクセスマスク](/ja/features/access-mask/) |
+| 内部構成 | CLI、core、Markdown、theme、search、dev server の crate 分割 | [Crates](/ja/internals/crates/) |
 
-## ビルドフロー
+## ビルドの流れ
 
 ```mermaid
 flowchart LR
-    A[rustpress.toml] --> B[Markdown をスキャン]
-    B --> C[frontmatter を解析]
-    C --> D[HTML をレンダリング]
-    D --> E[dist に書き込み]
-    B --> F[検索インデックスを構築]
-    F --> E
+    Config[rustpress.toml] --> Load[設定を読み込む]
+    Docs[docs/**/*.md] --> Parse[frontmatter と Markdown を解析]
+    Parse --> Render[HTML を生成]
+    Parse --> Search[検索インデックスを生成]
+    Public[public/] --> Copy[静的資産をコピー]
+    Render --> Dist[dist/]
+    Search --> Dist
+    Copy --> Dist
 ```
 
-## 検索を試す
+## 出力
 
-`theme`、`build`、`Mermaid` などの英単語を検索できます。検索には中国語の内容も含まれます。たとえば `搜索` や `访问遮罩` を試せます。
+- 各ページの `index.html`
+- 各ページの `index.md.txt`
+- `assets/rustpress.css` と `assets/rustpress.js`
+- 検索資産 `search-index.json`、`search-index.json.br`、`rustpress_search_bg.wasm`
+- `public/` の静的ファイル
 
-## 静的出力
+## クイックスタート
 
-生成されるサイトは完全に静的です。アクセスマスクはユーザーインターフェイス層にすぎません。ページ HTML は引き続き `dist/` に存在します。
+```bash
+cargo install rust-press
+rust-press init my-docs
+cd my-docs
+rust-press dev
+```
+
+静的出力を作るには:
+
+```bash
+rust-press build --config rustpress.toml
+```
+
+## 注意
+
+RustPress は静的ファイルを生成します。アクセスマスクは表示上の遮蔽であり、HTML を暗号化しません。機密情報にはホスティング側の認証を使ってください。

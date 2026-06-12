@@ -8,30 +8,70 @@ access: public
 
 # Markdown
 
-Markdown은 `pulldown-cmark`로 파싱됩니다. MVP는 표, 작업 목록, 취소선, 각주, 제목 속성, 제목 앵커, Mermaid fenced blocks를 활성화합니다.
+Markdown 처리는 `rustpress-md`가 담당합니다. frontmatter, HTML 렌더링, 제목 수집, 검색 텍스트 추출, 코드 블록 확장을 처리합니다.
+
+## 지원 문법
+
+- 표
+- 각주
+- 취소선
+- 작업 목록
+- 제목 속성
+- 일반 Markdown 문법
+
+## Frontmatter
+
+```yaml
+---
+title: Page Title
+layout: doc
+sidebar: true
+search: true
+access: public
+---
+```
+
+`title`이 없으면 첫 제목을 사용하고, 제목도 없으면 `Untitled`가 됩니다.
 
 ## 제목 앵커
 
-모든 제목에는 안정적인 앵커가 부여됩니다. ASCII가 아닌 제목은 보존되므로 `中文 标题` 같은 제목은 `#中文-标题`가 됩니다.
+```toml
+[markdown]
+heading_anchors = true
+```
+
+영어는 소문자로 바뀌고 공백은 `-`가 되며 중복 제목에는 번호가 붙습니다. CJK 문자는 유지됩니다.
 
 ## 코드 블록
 
-일반 fenced code block은 기본적으로 줄 번호를 표시합니다. `rustpress.toml`에서 `code_line_numbers = false`를 설정하면 줄 번호를 끌 수 있습니다. 복사 버튼은 코드 내용만 복사합니다.
+```toml
+[markdown]
+code_highlight = true
+code_line_numbers = true
+```
+
+코드 블록에는 syntect 하이라이트, 줄 번호, 언어 라벨, 복사 버튼이 표시됩니다. 복사 내용에는 줄 번호가 포함되지 않습니다.
 
 ## Mermaid
 
-`mermaid` 언어의 fenced code block은 Mermaid block으로 출력되고 클라이언트 측 Mermaid 스크립트로 렌더링됩니다.
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant Builder
-    User->>CLI: rust-press build
-    CLI->>Builder: BuildOptions
-    Builder-->>User: dist/
+```toml
+[markdown]
+mermaid = true
 ```
+
+`mermaid` fenced block은 브라우저에서 다이어그램으로 렌더링됩니다. 색상 모드를 바꾸면 다시 렌더링됩니다.
 
 ## 검색 텍스트
 
-`index_code = false`이면 코드 블록은 검색 인덱스에서 제외됩니다.
+기본적으로 코드 블록은 검색 본문에 포함되지 않습니다.
+
+```toml
+[search]
+index_code = false
+```
+
+API 문서라면 `true`로 바꿀 수 있습니다.
+
+## Markdown 원본
+
+각 페이지에 `index.md.txt`가 생성되며, 테마에서 Markdown과 Markdown URL을 복사할 수 있습니다.

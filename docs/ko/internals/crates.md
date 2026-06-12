@@ -8,28 +8,46 @@ access: public
 
 # Crates
 
-워크스페이스는 작은 crate들로 나뉘어 있습니다.
+RustPress workspace는 책임별로 crate를 나눕니다.
+
+```mermaid
+flowchart LR
+    CLI[rust-press] --> Core[rustpress-core]
+    Dev[rustpress-dev] --> Core
+    Core --> MD[rustpress-md]
+    Core --> Theme[rustpress-theme]
+    Core --> Search[rustpress-search]
+```
 
 ## rust-press
 
-명령줄 인자를 파싱하고 명령을 dispatch합니다.
+CLI 진입점입니다. `init`, `build`, `dev`, `preview`를 정의하고 core/dev crate로 작업을 전달합니다.
 
 ## rustpress-core
 
-설정을 로드하고, 소스 Markdown을 스캔하고, 렌더링을 조율하고, public 자산을 복사하고, 검색 자산을 씁니다.
+설정 로드, 이전 `nav` 거부, Markdown scan, route와 locale 계산, 내비게이션 생성, HTML/검색/자산 출력을 담당합니다.
 
 ## rustpress-md
 
-frontmatter를 파싱하고, Markdown을 렌더링하고, 제목 앵커를 생성하고, 검색 텍스트를 추출합니다.
+frontmatter, Markdown 확장, 제목 앵커, 코드 블록, Mermaid, 검색 텍스트 추출을 담당합니다.
 
 ## rustpress-theme
 
-기본 HTML을 렌더링하고 CSS 및 JavaScript runtime 자산을 씁니다.
+HTML shell, CSS, JavaScript 실행 스크립트, 내비게이션, 사이드바, 목차, 언어 전환, 검색 UI, 색상 모드, 접근 마스크, 복사 기능을 제공합니다.
 
 ## rustpress-search
 
-로컬 검색 인덱스를 구축하고 tokenization helpers를 노출합니다.
+페이지 title, URL, heading, body에서 로컬 검색 인덱스를 생성합니다. 영어와 CJK token을 지원합니다.
 
 ## rustpress-dev
 
-정적 파일을 제공하고, 소스 파일을 감시하고, 변경 시 다시 빌드하고, 개발 모드에서 새로고침 스크립트를 주입합니다.
+`dev`와 `preview` 정적 서버입니다. `dev`에서는 감시, 재빌드, live reload를 수행합니다.
+
+## 데이터 흐름
+
+```text
+rustpress.toml + docs/**/*.md + public/**
+    -> rustpress-core
+    -> rustpress-md / rustpress-theme / rustpress-search
+    -> dist/
+```

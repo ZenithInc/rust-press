@@ -8,22 +8,43 @@ access: public
 
 # CLI
 
-The binary is named `rust-press`.
+`rust-press` provides four commands: `init`, `build`, `dev`, and `preview`.
+
+## Commands
+
+| Command | Purpose | Default Behavior |
+| --- | --- | --- |
+| `init [dir]` | Create a new docs project | Uses the current directory when `dir` is omitted |
+| `build` | Generate the static site | Reads `rustpress.toml` and writes `dist/` |
+| `dev` | Local development | Builds, serves, watches files, and reloads the browser |
+| `preview` | Preview generated output | Serves the existing `out_dir` |
+
+Help:
+
+```bash
+rust-press --help
+rust-press build --help
+```
 
 ## init
 
 ```bash
-rust-press init [dir]
+rust-press init my-docs
 ```
 
 Creates:
 
-- `rustpress.toml`
-- `docs/index.md`
-- `docs/private.md`
-- `public/.gitkeep`
+```text
+my-docs/
+├── rustpress.toml
+├── docs/
+│   ├── index.md
+│   └── private.md
+└── public/
+    └── .gitkeep
+```
 
-The command refuses to overwrite existing files.
+The generated config includes examples for top navigation, sidebars, theme, search, and access masking.
 
 ## build
 
@@ -31,20 +52,43 @@ The command refuses to overwrite existing files.
 rust-press build --config rustpress.toml
 ```
 
-Build output goes to the configured `out_dir`, which defaults to `dist`.
+The build:
+
+1. Loads and normalizes config.
+2. Scans Markdown from `src_dir`.
+3. Parses frontmatter, headings, and body content.
+4. Renders pages, top nav, sidebars, table of contents, and language switcher.
+5. Writes search index and theme assets.
+6. Copies static files from `public/`.
+
+`out_dir` is cleaned before each build.
 
 ## dev
 
 ```bash
-rust-press dev --host 0.0.0.0 --port 5190
+rust-press dev --config rustpress.toml --host 127.0.0.1 --port 5177
 ```
 
-The dev server performs an initial build, serves `dist`, watches Markdown and config files, and injects a small refresh script into HTML responses.
+`dev` builds once, serves `out_dir`, watches `src_dir` and the config file, rebuilds on create/modify/remove events, and injects a small live reload script into HTML responses.
+
+The default URL is `http://127.0.0.1:5177/`.
 
 ## preview
 
 ```bash
-rust-press preview --host 127.0.0.1 --port 4177
+rust-press preview --config rustpress.toml --host 127.0.0.1 --port 4177
 ```
 
-Preview serves the already built static output without watching files.
+`preview` does not watch files and does not rebuild. It serves the current generated output and is useful before deployment.
+
+## Config Path
+
+All commands that need config accept `--config`:
+
+```bash
+rust-press build --config site/rustpress.toml
+rust-press dev --config site/rustpress.toml
+rust-press preview --config site/rustpress.toml
+```
+
+Relative paths are resolved from the config file directory. If `site/rustpress.toml` says `src_dir = "docs"`, RustPress reads `site/docs/`.
