@@ -62,7 +62,7 @@ access: public
 | 설정 | 용도 |
 | --- | --- |
 | `top_nav` | 상단 내비게이션 |
-| `sidebars` | 사이드바 |
+| Markdown 경로 | 자동 사이드바 |
 ```
 
 ## 인용과 각주

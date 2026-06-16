@@ -32,9 +32,9 @@ The mobile layout keeps the page readable while collapsing dense navigation.
 The theme renders two independent navigation surfaces:
 
 - `top_nav` for the top bar and dropdowns
-- `sidebars` for the left document navigation
+- Markdown paths for the left document navigation
 
-`sidebar = "guide"` binds a top section to a sidebar group. It does not copy `top_nav.items` into the sidebar.
+Top navigation does not define sidebar content. The current page's first directory segment selects the generated sidebar section.
 
 ## Color Mode
 
@@ -71,7 +71,7 @@ Search reads `assets/search-index.json` in the browser and does not need a serve
 The theme exposes:
 
 - copy buttons for every code block
-- a Markdown copy menu for every page
+- a Markdown copy menu for every page, with actions for the page source and its `index.md.txt` URL
 
 Successful copy actions briefly show a completed state.
 

@@ -63,7 +63,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 Install a specific tag:
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.10 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.11 rust-press
 ```
 
 ## Prebuilt Binaries

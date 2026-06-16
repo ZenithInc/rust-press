@@ -57,7 +57,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 특정 tag:
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.10 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.11 rust-press
 ```
 
 ## 첫 사이트 만들기

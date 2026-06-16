@@ -92,4 +92,4 @@ index_code = false
 
 ## Markdown 源文件
 
-构建时每个页面都会写入 `index.md.txt`。主题提供“复制 Markdown”和“复制 Markdown URL”，方便把页面源码交给审阅、AI 工具或外部自动化流程。
+构建时每个页面都会在同一路由目录写入 `index.md.txt`。例如 `/guide/cli/` 会输出 `/guide/cli/index.md.txt`。主题提供“复制 Markdown”和“复制 Markdown URL”，方便把页面源码交给审阅、AI 工具或外部自动化流程。

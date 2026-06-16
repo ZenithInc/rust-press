@@ -32,9 +32,9 @@ RustPress 目前提供一个内置默认主题。主题由静态 HTML、CSS 和 
 主题同时渲染两套导航：
 
 - `top_nav` 渲染顶部菜单和顶部下拉。
-- `sidebars` 渲染左侧文档目录。
+- Markdown 路径自动生成左侧文档目录。
 
-两者是独立配置。`sidebar = "guide"` 只是把顶部分区绑定到左侧某个组，不会把 `top_nav.items` 复制到侧边栏。
+顶部导航不会决定侧边栏内容。当前页面属于哪个一级目录，左侧就显示该目录下的 Markdown 页面。
 
 ## 颜色模式
 
@@ -71,7 +71,7 @@ github_url = "https://github.com/your-org/your-repo"
 主题提供两类复制能力：
 
 - 每个代码块的复制按钮。
-- 页面右下角的 Markdown 复制菜单。
+- 页面右下角的 Markdown 复制菜单，可以复制当前页面源码或对应的 `index.md.txt` URL。
 
 复制按钮会在成功后短暂显示完成状态。
 

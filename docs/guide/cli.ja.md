@@ -30,7 +30,7 @@ rust-press build --help
 rust-press init my-docs
 ```
 
-トップナビ、サイドバー、テーマ、検索、アクセスマスクの例を含む最小構成を作ります。
+トップナビ、テーマ、検索、アクセスマスクの例を含む最小構成を作ります。サイドバーは Markdown パスから自動生成されます。
 
 ## build
 
@@ -43,7 +43,7 @@ rust-press build --config rustpress.toml
 1. 設定を読み込み正規化する。
 2. `src_dir` の Markdown を読む。
 3. frontmatter、見出し、本文を解析する。
-4. ページ、ナビ、サイドバー、目次、言語切替を生成する。
+4. ページ、ナビ、自動サイドバー、目次、言語切替を生成する。
 5. 検索インデックスとテーマ資産を書き込む。
 6. `public/` をコピーする。
 
@@ -56,6 +56,8 @@ rust-press dev --config rustpress.toml --host 127.0.0.1 --port 5177
 ```
 
 `dev` は一度ビルドし、`src_dir` と設定ファイルを監視し、変更時に再ビルドします。HTML には live reload script が注入されます。
+
+`dev` 中は `base = "/"` としてレンダリングされるため、ローカル URL はサーバールートから動作します。`build` と `preview` は設定されたデプロイ用 `base` を使います。
 
 ## preview
 

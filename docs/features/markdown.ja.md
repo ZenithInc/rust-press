@@ -74,4 +74,4 @@ API 文書などでは `true` にできます。
 
 ## Markdown ソース
 
-各ページに `index.md.txt` が作られ、テーマから Markdown と Markdown URL をコピーできます。
+各ページは同じルートディレクトリに `index.md.txt` を出力します。たとえば `/guide/cli/` は `/guide/cli/index.md.txt` を生成します。テーマから Markdown 本文と Markdown URL をコピーできます。

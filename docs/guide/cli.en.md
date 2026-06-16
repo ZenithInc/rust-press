@@ -44,7 +44,7 @@ my-docs/
     └── .gitkeep
 ```
 
-The generated config includes examples for top navigation, sidebars, theme, search, and access masking.
+The generated config includes examples for top navigation, theme, search, and access masking. Sidebars are generated from Markdown paths.
 
 ## build
 
@@ -57,7 +57,7 @@ The build:
 1. Loads and normalizes config.
 2. Scans Markdown from `src_dir`.
 3. Parses frontmatter, headings, and body content.
-4. Renders pages, top nav, sidebars, table of contents, and language switcher.
+4. Renders pages, top nav, generated sidebars, table of contents, and language switcher.
 5. Writes search index and theme assets.
 6. Copies static files from `public/`.
 
@@ -70,6 +70,8 @@ rust-press dev --config rustpress.toml --host 127.0.0.1 --port 5177
 ```
 
 `dev` builds once, serves `out_dir`, watches `src_dir` and the config file, rebuilds on create/modify/remove events, and injects a small live reload script into HTML responses.
+
+During `dev`, RustPress temporarily renders with `base = "/"` so local URLs work from the server root. `build` and `preview` keep the configured deployment `base`.
 
 The default URL is `http://127.0.0.1:5177/`.
 

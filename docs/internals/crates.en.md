@@ -40,7 +40,7 @@ Build pipeline:
 - Reject old `nav` config and require `top_nav`.
 - Scan Markdown from `src_dir`.
 - Compute routes, locales, and translation mapping.
-- Build top navigation, sidebars, and language options.
+- Build top navigation, generated sidebars, and language options.
 - Call Markdown, theme, and search crates.
 - Write HTML, Markdown source files, theme assets, and search assets.
 - Copy `public/` assets.

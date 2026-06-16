@@ -15,7 +15,7 @@ workflow.
 - Built-in documentation theme with responsive navigation, sidebar, table of
   contents, local search, subtle grid background, and Light/Dark switching.
 - Global search shortcut: press `Shift` twice to open search.
-- Multilingual docs using locale-prefixed routes.
+- Multilingual docs using filename locale suffixes and locale-prefixed routes.
 - Local search index for English and CJK content.
 - Front-end access mask for demo or lightweight viewing flows.
 
@@ -72,7 +72,8 @@ rust-press preview --config rustpress.toml --host 127.0.0.1 --port 4177
 - `init` creates `rustpress.toml`, starter Markdown pages, and `public/.gitkeep`.
 - `build` renders the static site into the configured `out_dir`.
 - `dev` builds, serves the site, watches Markdown/config changes, and injects a
-  small live reload script.
+  small live reload script. It renders local URLs with `base = "/"` even when
+  the deployment config uses a subpath.
 - `preview` serves the already built static output.
 
 ## Configuration
@@ -88,23 +89,10 @@ base = "/"
 [[top_nav]]
 text = "Guide"
 link = "/guide/installation/"
-sidebar = "guide"
 
 [[top_nav.items]]
 text = "Quick Start"
 link = "/guide/installation/"
-
-[[sidebars.guide]]
-text = "Guide"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "Installation"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "Configuration"
-link = "/guide/configuration/"
 
 [theme]
 name = "default"
@@ -144,6 +132,10 @@ access: public
 
 `access` can be `public` or `masked`. Set `search: false` to exclude a page from
 the generated search index.
+
+Sidebars are generated from `docs/` paths. For example, `docs/guide/cli.md`
+renders at `/guide/cli/` and appears in the `/guide/` sidebar. Locale files use
+suffixes: `docs/guide/cli.en.md` renders at `/en/guide/cli/`.
 
 ## Repository Layout
 
@@ -195,7 +187,7 @@ cargo publish -p rust-press
 ```
 
 Before publishing, run `cargo test` and then `cargo publish --dry-run -p <crate>`
-in the same order. Pushing a tag such as `v0.1.10` builds GitHub Releases
+in the same order. Pushing a tag such as `v0.1.11` builds GitHub Releases
 archives for Linux, macOS, and Windows.
 
 ## License

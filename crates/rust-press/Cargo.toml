@@ -19,5 +19,5 @@ path = "src/main.rs"
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
-rustpress-core = { version = "0.1.10", path = "../rustpress-core" }
-rustpress-dev = { version = "0.1.10", path = "../rustpress-dev" }
+rustpress-core = { version = "0.1.11", path = "../rustpress-core" }
+rustpress-dev = { version = "0.1.11", path = "../rustpress-dev" }

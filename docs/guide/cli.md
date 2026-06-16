@@ -44,7 +44,7 @@ my-docs/
     └── .gitkeep
 ```
 
-生成的配置已经包含顶部导航、侧边栏、主题、搜索和访问遮罩示例。
+生成的配置已经包含顶部导航、主题、搜索和访问遮罩示例；侧边栏会从 Markdown 路径自动生成。
 
 ## build
 
@@ -57,7 +57,7 @@ rust-press build --config rustpress.toml
 1. 加载并规范化配置。
 2. 扫描 `src_dir` 下的 Markdown。
 3. 解析 frontmatter、标题和正文。
-4. 渲染页面、顶部导航、侧边栏、目录、语言切换器。
+4. 渲染页面、顶部导航、自动侧边栏、目录、语言切换器。
 5. 写入搜索索引和主题资源。
 6. 复制 `public/` 中的静态资源。
 
@@ -75,6 +75,8 @@ rust-press dev --config rustpress.toml --host 127.0.0.1 --port 5177
 - 监听 `src_dir` 和配置文件。
 - 文件创建、修改、删除后重新构建。
 - 向 HTML 注入一个小型 live reload 脚本。
+
+`dev` 会把构建时的 `base` 临时覆盖为 `/`，这样本地地址始终从站点根路径访问。正式构建和 `preview` 仍使用配置文件里的 `base`。
 
 默认地址是 `http://127.0.0.1:5177/`。
 

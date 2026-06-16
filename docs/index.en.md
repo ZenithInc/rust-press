@@ -13,7 +13,7 @@ RustPress is a Rust-first static documentation generator. It reads `rustpress.to
 ## When To Use It
 
 - Project docs, CLI manuals, SDK guides, and internal knowledge bases.
-- Sites where one TOML file should control top navigation, sidebars, locales, theme behavior, search, and access masks.
+- Sites where one TOML file should control top navigation, locales, theme behavior, search, and access masks while sidebars come from the docs directory.
 - Static output that can be deployed to GitHub Pages, object storage, or any static server.
 - Docs that need search, dark mode, code copy, Mermaid diagrams, Markdown source copy, and a lightweight viewing mask.
 
@@ -22,12 +22,12 @@ RustPress is a Rust-first static documentation generator. It reads `rustpress.to
 | Feature | What RustPress Does | Start Here |
 | --- | --- | --- |
 | CLI workflow | Initialize, build, develop with reload, and preview generated output | [CLI](/en/guide/cli/) |
-| Configuration | `top_nav`, `sidebars`, `locales`, theme, search, access mask | [Configuration](/en/guide/configuration/) |
+| Configuration | `top_nav`, generated sidebars, `locales`, theme, search, access mask | [Configuration](/en/guide/configuration/) |
 | Markdown rendering | Tables, task lists, footnotes, heading attributes, code highlight, line numbers, copy buttons | [Markdown](/en/features/markdown/) |
 | Mermaid | Render `mermaid` fenced code blocks in the browser | [Markdown Tutorial](/en/guide/markdown-tutorial/) |
 | Theme | Top nav, sidebar, table of contents, mobile layout, Light/Dark switch, GitHub link | [Theme](/en/features/theme/) |
 | Search | Local JSON index with English normalization and CJK token support | [Search](/en/features/search/) |
-| Locales | `docs/<locale>/` routes, language switcher, translation fallback | [Configuration](/en/guide/configuration/#multilingual-docs) |
+| Locales | `.<locale>.md` suffixes, language switcher, translation fallback | [Configuration](/en/guide/configuration/#multilingual-docs) |
 | Access mask | Front-end password mask for pages marked `access: masked` | [Access Mask](/en/features/access-mask/) |
 | Workspace architecture | Separated crates for CLI, core build, Markdown, theme, search, and dev server | [Crates](/en/internals/crates/) |
 

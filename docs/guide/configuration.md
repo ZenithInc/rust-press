@@ -8,7 +8,7 @@ access: public
 
 # 配置
 
-RustPress 使用一个 `rustpress.toml` 描述站点、导航、主题、搜索、多语言和访问遮罩。配置文件所在目录就是项目根目录，相对路径都会从这里解析。
+RustPress 使用一个 `rustpress.toml` 描述站点基础信息、顶部入口、主题、搜索、多语言和访问遮罩。配置文件所在目录就是项目根目录，相对路径都会从这里解析。
 
 ## 最小配置
 
@@ -28,15 +28,16 @@ base = "/"
 
 `base` 会自动补齐开头和结尾的 `/`。
 
+`build` 会把 `base` 写入 HTML、搜索索引和 Markdown 源文件 URL。`dev` 为了本地调试会临时使用 `/`，避免带子路径的部署配置影响本地预览。
+
 ## 顶部导航
 
-`top_nav` 只控制顶部栏。它可以是直接链接，也可以带下拉菜单。
+`top_nav` 只配置顶部入口。它可以是直接链接，也可以带下拉菜单。
 
 ```toml
 [[top_nav]]
 text = "指南"
 link = "/guide/cli/"
-sidebar = "guide"
 
 [[top_nav.items]]
 text = "快速开始"
@@ -51,36 +52,28 @@ link = "/guide/configuration/"
 | --- | --- |
 | `text` | 顶部显示文字 |
 | `link` | 顶层入口链接；省略时只作为下拉触发器 |
-| `sidebar` | 把这个顶部分区绑定到某个侧边栏组 |
-| `items` | 只用于顶部下拉菜单 |
+| `items` | 顶部下拉菜单 |
 
-旧配置名 `nav` 已被移除。使用 `[[nav]]` 或 `[[locales.en.nav]]` 会直接报错，请改成 `[[top_nav]]` 或 `[[locales.en.top_nav]]`。
+`http://`、`https://`、`mailto:` 和 `#` 开头的链接按普通链接保留。本地链接会自动规范化为站内路径；在多语言页面上会按当前 locale 前缀渲染，例如 `/guide/cli/` 会变成 `/en/guide/cli/`。
+
+旧配置名 `nav` 已被移除。`top_nav.sidebar`、`sidebars`、`locales.*.top_nav` 和 `locales.*.sidebars` 也已移除，配置加载时会直接报错。
 
 ## 侧边栏
 
-`sidebars.<id>` 只控制左侧菜单。它不会复用 `top_nav.items`。
+侧边栏由 `docs/` 目录自动生成，不再写在 TOML 中。当前页面属于哪个一级目录，就显示该目录下的页面；首页不显示目录侧边栏。
 
-```toml
-[[sidebars.guide]]
-text = "指南"
-link = "/guide/cli/"
-
-[[sidebars.guide.items]]
-text = "命令行"
-link = "/guide/cli/"
-
-[[sidebars.guide.items]]
-text = "安装"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "配置"
-link = "/guide/configuration/"
+```text
+docs/
+  index.md                  -> /
+  guide.md                  -> /guide/
+  guide/cli.md              -> /guide/cli/
+  guide/configuration.md    -> /guide/configuration/
+  features/search.md        -> /features/search/
 ```
 
-顶部的 `sidebar = "guide"` 只是说明当前顶部分区和 `sidebars.guide` 有关联。只出现在 `top_nav.items`、没有出现在 `sidebars.guide.items` 的页面，不会自动加入左侧侧边栏。
+访问 `/guide/cli/` 时只显示 `guide` 下的页面；访问 `/features/search/` 时只显示 `features` 下的页面。侧边栏最多展示 2 级，更深的页面仍会生成路由，但在侧边栏中收敛到第二级。
 
-如果没有配置任何 `sidebars`，RustPress 会根据 Markdown 页面路径自动生成侧边栏，并用顶层 `top_nav` 的顺序辅助分组排序。
+页面标题优先使用 frontmatter `title`，没有时使用 Markdown 第一个标题。frontmatter `sidebar: false` 可以把单页排除出自动侧边栏。
 
 ## Markdown
 
@@ -150,7 +143,7 @@ access: public
 | --- | --- | --- |
 | `title` | 第一个标题或 `Untitled` | 页面标题 |
 | `layout` | `doc` | 当前主题使用文档布局 |
-| `sidebar` | `true` | 自动侧边栏模式下是否参与侧边栏 |
+| `sidebar` | `true` | 是否参与自动侧边栏 |
 | `search` | `true` | 是否进入搜索索引 |
 | `access` | `public` | `public` 或 `masked` |
 
@@ -158,7 +151,7 @@ access: public
 
 ## 多语言文档
 
-配置 `locales` 后，必须提供 `locales.root`。根语言继续使用 `docs/` 下的文件，其他语言使用 `docs/<locale>/`。
+配置 `locales` 后，必须提供 `locales.root`。根语言使用无后缀文件，其他语言使用 `.<locale>.md` 文件名后缀。
 
 ```toml
 [locales.root]
@@ -171,20 +164,16 @@ label = "English"
 lang = "en-US"
 link = "/en/"
 title = "English Docs"
-
-[[locales.en.top_nav]]
-text = "Guide"
-link = "guide/cli/"
-sidebar = "guide"
-
-[[locales.en.sidebars.guide]]
-text = "Guide"
-link = "guide/cli/"
 ```
 
-相对链接会解析到 locale 前缀下。例如 `guide/cli/` 在 `locales.en.top_nav` 中会变成 `/en/guide/cli/`。
+```text
+docs/index.md          -> /
+docs/index.en.md       -> /en/
+docs/guide/cli.md      -> /guide/cli/
+docs/guide/cli.en.md   -> /en/guide/cli/
+```
 
-语言切换器会优先跳到当前页面的对应译文。如果目标语言没有同一页面，会回退到该语言首页。
+翻译匹配会去掉语言后缀后计算。同一页面存在译文时，语言切换器会跳到对应译文；缺失时回退到目标语言首页。顶部导航统一使用根配置，不在 `locales` 下重复配置。
 
 ## 静态资源
 

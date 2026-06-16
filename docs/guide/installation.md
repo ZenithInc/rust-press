@@ -65,7 +65,7 @@ cargo install --git https://github.com/ZenithInc/rust-press rust-press
 安装指定 tag：
 
 ```bash
-cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.10 rust-press
+cargo install --git https://github.com/ZenithInc/rust-press --tag v0.1.11 rust-press
 ```
 
 ## 预编译二进制

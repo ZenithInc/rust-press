@@ -6,7 +6,6 @@ base = "/"
 [[top_nav]]
 text = "指南"
 link = "/guide/cli/"
-sidebar = "guide"
 
 [[top_nav.items]]
 text = "快速开始"
@@ -19,7 +18,6 @@ link = "/guide/configuration/"
 [[top_nav]]
 text = "功能"
 link = "/features/markdown/"
-sidebar = "features"
 
 [[top_nav.items]]
 text = "Markdown 能力"
@@ -32,57 +30,8 @@ link = "/features/theme/"
 [[top_nav]]
 text = "参考"
 link = "/internals/crates/"
-sidebar = "reference"
 
 [[top_nav.items]]
-text = "Crates"
-link = "/internals/crates/"
-
-[[sidebars.guide]]
-text = "指南"
-link = "/guide/cli/"
-
-[[sidebars.guide.items]]
-text = "命令行"
-link = "/guide/cli/"
-
-[[sidebars.guide.items]]
-text = "安装"
-link = "/guide/installation/"
-
-[[sidebars.guide.items]]
-text = "配置"
-link = "/guide/configuration/"
-
-[[sidebars.guide.items]]
-text = "Markdown 教程"
-link = "/guide/markdown-tutorial/"
-
-[[sidebars.features]]
-text = "功能"
-link = "/features/markdown/"
-
-[[sidebars.features.items]]
-text = "Markdown"
-link = "/features/markdown/"
-
-[[sidebars.features.items]]
-text = "主题"
-link = "/features/theme/"
-
-[[sidebars.features.items]]
-text = "搜索"
-link = "/features/search/"
-
-[[sidebars.features.items]]
-text = "访问遮罩"
-link = "/features/access-mask/"
-
-[[sidebars.reference]]
-text = "参考"
-link = "/internals/crates/"
-
-[[sidebars.reference.items]]
 text = "Crates"
 link = "/internals/crates/"
 
@@ -97,266 +46,17 @@ lang = "en-US"
 link = "/en/"
 title = "RustPress"
 
-[[locales.en.top_nav]]
-text = "Guide"
-link = "guide/cli/"
-sidebar = "guide"
-
-[[locales.en.top_nav.items]]
-text = "Quick Start"
-link = "guide/installation/"
-
-[[locales.en.top_nav.items]]
-text = "Site Config"
-link = "guide/configuration/"
-
-[[locales.en.top_nav]]
-text = "Features"
-link = "features/markdown/"
-sidebar = "features"
-
-[[locales.en.top_nav.items]]
-text = "Markdown Features"
-link = "features/markdown/"
-
-[[locales.en.top_nav.items]]
-text = "Theme UI"
-link = "features/theme/"
-
-[[locales.en.top_nav]]
-text = "Reference"
-link = "internals/crates/"
-sidebar = "reference"
-
-[[locales.en.top_nav.items]]
-text = "Crates"
-link = "internals/crates/"
-
-[[locales.en.sidebars.guide]]
-text = "Guide"
-link = "guide/cli/"
-
-[[locales.en.sidebars.guide.items]]
-text = "CLI"
-link = "guide/cli/"
-
-[[locales.en.sidebars.guide.items]]
-text = "Installation"
-link = "guide/installation/"
-
-[[locales.en.sidebars.guide.items]]
-text = "Configuration"
-link = "guide/configuration/"
-
-[[locales.en.sidebars.guide.items]]
-text = "Markdown Tutorial"
-link = "guide/markdown-tutorial/"
-
-[[locales.en.sidebars.features]]
-text = "Features"
-link = "features/markdown/"
-
-[[locales.en.sidebars.features.items]]
-text = "Markdown"
-link = "features/markdown/"
-
-[[locales.en.sidebars.features.items]]
-text = "Theme"
-link = "features/theme/"
-
-[[locales.en.sidebars.features.items]]
-text = "Search"
-link = "features/search/"
-
-[[locales.en.sidebars.features.items]]
-text = "Access Mask"
-link = "features/access-mask/"
-
-[[locales.en.sidebars.reference]]
-text = "Reference"
-link = "internals/crates/"
-
-[[locales.en.sidebars.reference.items]]
-text = "Crates"
-link = "internals/crates/"
-
 [locales.ja]
 label = "日本語"
 lang = "ja-JP"
 link = "/ja/"
 title = "RustPress"
 
-[[locales.ja.top_nav]]
-text = "ガイド"
-link = "guide/cli/"
-sidebar = "guide"
-
-[[locales.ja.top_nav.items]]
-text = "クイックスタート"
-link = "guide/installation/"
-
-[[locales.ja.top_nav.items]]
-text = "サイト設定"
-link = "guide/configuration/"
-
-[[locales.ja.top_nav]]
-text = "機能"
-link = "features/markdown/"
-sidebar = "features"
-
-[[locales.ja.top_nav.items]]
-text = "Markdown 機能"
-link = "features/markdown/"
-
-[[locales.ja.top_nav.items]]
-text = "テーマ UI"
-link = "features/theme/"
-
-[[locales.ja.top_nav]]
-text = "リファレンス"
-link = "internals/crates/"
-sidebar = "reference"
-
-[[locales.ja.top_nav.items]]
-text = "Crates"
-link = "internals/crates/"
-
-[[locales.ja.sidebars.guide]]
-text = "ガイド"
-link = "guide/cli/"
-
-[[locales.ja.sidebars.guide.items]]
-text = "CLI"
-link = "guide/cli/"
-
-[[locales.ja.sidebars.guide.items]]
-text = "インストール"
-link = "guide/installation/"
-
-[[locales.ja.sidebars.guide.items]]
-text = "設定"
-link = "guide/configuration/"
-
-[[locales.ja.sidebars.guide.items]]
-text = "Markdown チュートリアル"
-link = "guide/markdown-tutorial/"
-
-[[locales.ja.sidebars.features]]
-text = "機能"
-link = "features/markdown/"
-
-[[locales.ja.sidebars.features.items]]
-text = "Markdown"
-link = "features/markdown/"
-
-[[locales.ja.sidebars.features.items]]
-text = "テーマ"
-link = "features/theme/"
-
-[[locales.ja.sidebars.features.items]]
-text = "検索"
-link = "features/search/"
-
-[[locales.ja.sidebars.features.items]]
-text = "アクセスマスク"
-link = "features/access-mask/"
-
-[[locales.ja.sidebars.reference]]
-text = "リファレンス"
-link = "internals/crates/"
-
-[[locales.ja.sidebars.reference.items]]
-text = "Crates"
-link = "internals/crates/"
-
 [locales.ko]
 label = "한국어"
 lang = "ko-KR"
 link = "/ko/"
 title = "RustPress"
-
-[[locales.ko.top_nav]]
-text = "가이드"
-link = "guide/cli/"
-sidebar = "guide"
-
-[[locales.ko.top_nav.items]]
-text = "빠른 시작"
-link = "guide/installation/"
-
-[[locales.ko.top_nav.items]]
-text = "사이트 설정"
-link = "guide/configuration/"
-
-[[locales.ko.top_nav]]
-text = "기능"
-link = "features/markdown/"
-sidebar = "features"
-
-[[locales.ko.top_nav.items]]
-text = "Markdown 기능"
-link = "features/markdown/"
-
-[[locales.ko.top_nav.items]]
-text = "테마 UI"
-link = "features/theme/"
-
-[[locales.ko.top_nav]]
-text = "참조"
-link = "internals/crates/"
-sidebar = "reference"
-
-[[locales.ko.top_nav.items]]
-text = "Crates"
-link = "internals/crates/"
-
-[[locales.ko.sidebars.guide]]
-text = "가이드"
-link = "guide/cli/"
-
-[[locales.ko.sidebars.guide.items]]
-text = "CLI"
-link = "guide/cli/"
-
-[[locales.ko.sidebars.guide.items]]
-text = "설치"
-link = "guide/installation/"
-
-[[locales.ko.sidebars.guide.items]]
-text = "설정"
-link = "guide/configuration/"
-
-[[locales.ko.sidebars.guide.items]]
-text = "Markdown 튜토리얼"
-link = "guide/markdown-tutorial/"
-
-[[locales.ko.sidebars.features]]
-text = "기능"
-link = "features/markdown/"
-
-[[locales.ko.sidebars.features.items]]
-text = "Markdown"
-link = "features/markdown/"
-
-[[locales.ko.sidebars.features.items]]
-text = "테마"
-link = "features/theme/"
-
-[[locales.ko.sidebars.features.items]]
-text = "검색"
-link = "features/search/"
-
-[[locales.ko.sidebars.features.items]]
-text = "접근 마스크"
-link = "features/access-mask/"
-
-[[locales.ko.sidebars.reference]]
-text = "참조"
-link = "internals/crates/"
-
-[[locales.ko.sidebars.reference.items]]
-text = "Crates"
-link = "internals/crates/"
 
 [theme]
 name = "default"

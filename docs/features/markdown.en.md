@@ -90,4 +90,4 @@ Set `index_code = true` for API references or code-heavy docs.
 
 ## Markdown Source Files
 
-Every page gets an `index.md.txt` copy. The theme provides Copy Markdown and Copy Markdown URL actions, which are useful for review, AI tools, and external automation.
+Every page gets an `index.md.txt` copy in the same route directory. For example, `/guide/cli/` emits `/guide/cli/index.md.txt`. The theme provides Copy Markdown and Copy Markdown URL actions, which are useful for review, AI tools, and external automation.

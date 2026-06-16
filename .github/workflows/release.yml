@@ -101,3 +101,80 @@ jobs:
           files: |
             rust-press-*-${{ matrix.target }}.${{ matrix.archive }}
             rust-press-*-${{ matrix.target }}.${{ matrix.archive }}.sha256
+
+  publish-crates:
+    name: Publish crates.io
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Publish crates
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+
+          if [[ -z "${CARGO_REGISTRY_TOKEN:-}" ]]; then
+            echo "CARGO_REGISTRY_TOKEN secret is required to publish crates." >&2
+            exit 1
+          fi
+
+          cargo metadata --no-deps --format-version 1 | python3 -c '
+          import json
+          import os
+          import sys
+
+          metadata = json.load(sys.stdin)
+          expected = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          versions = {package["version"] for package in metadata["packages"]}
+          if versions != {expected}:
+              raise SystemExit(f"tag version {expected} does not match workspace versions: {sorted(versions)}")
+          '
+
+          crate_published() {
+            local crate="$1"
+            cargo search "${crate}" --limit 1 2>/dev/null | grep -q "^${crate} = \"${version}\""
+          }
+
+          wait_for_crate() {
+            local crate="$1"
+            for _ in {1..45}; do
+              if crate_published "${crate}"; then
+                return 0
+              fi
+              sleep 20
+            done
+            echo "${crate} ${version} did not become visible on crates.io in time" >&2
+            return 1
+          }
+
+          publish_crate() {
+            local crate="$1"
+            if crate_published "${crate}"; then
+              echo "${crate} ${version} is already published; skipping."
+              return 0
+            fi
+
+            cargo publish --dry-run -p "${crate}"
+            cargo publish -p "${crate}"
+            wait_for_crate "${crate}"
+          }
+
+          publish_crate rustpress-md
+          publish_crate rustpress-search
+          publish_crate rustpress-theme
+          publish_crate rustpress-core
+          publish_crate rustpress-dev
+          publish_crate rust-press

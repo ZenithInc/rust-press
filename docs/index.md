@@ -13,7 +13,7 @@ RustPress 是一个 Rust-first 的静态文档生成器。它读取 `rustpress.t
 ## 适合什么场景
 
 - 项目文档、CLI 手册、SDK 说明和内部知识库。
-- 希望用一个 TOML 文件显式控制顶部导航、左侧侧边栏、多语言入口和主题行为。
+- 希望用一个 TOML 文件控制顶部导航、多语言入口和主题行为，同时让侧边栏从目录自动生成。
 - 需要纯静态输出，可部署到 GitHub Pages、对象存储或任意静态文件服务器。
 - 想要开箱即用的搜索、暗色模式、代码复制、Mermaid 图和前端访问遮罩。
 
@@ -22,12 +22,12 @@ RustPress 是一个 Rust-first 的静态文档生成器。它读取 `rustpress.t
 | 功能 | RustPress 做什么 | 入口 |
 | --- | --- | --- |
 | CLI 工作流 | 初始化项目、构建静态站点、开发热刷新、预览产物 | [命令行](/guide/cli/) |
-| 配置系统 | `top_nav`、`sidebars`、`locales`、主题、搜索、访问遮罩 | [配置](/guide/configuration/) |
+| 配置系统 | `top_nav`、自动侧边栏、`locales`、主题、搜索、访问遮罩 | [配置](/guide/configuration/) |
 | Markdown 渲染 | 表格、任务列表、脚注、标题属性、代码高亮、行号、复制按钮 | [Markdown](/features/markdown/) |
 | Mermaid | `mermaid` fenced code block 在浏览器中渲染为图 | [Markdown 教程](/guide/markdown-tutorial/) |
 | 主题 | 顶部导航、侧边栏、目录、移动端布局、Light/Dark 切换、GitHub 链接 | [主题](/features/theme/) |
 | 搜索 | 构建本地 JSON 索引，支持英文大小写归一和 CJK 内容 | [搜索](/features/search/) |
-| 多语言 | `docs/<locale>/` 路由、语言切换、翻译页面回退 | [配置](/guide/configuration/#多语言文档) |
+| 多语言 | `.<locale>.md` 文件后缀、语言切换、翻译页面回退 | [配置](/guide/configuration/#多语言文档) |
 | 访问遮罩 | 对 `access: masked` 页面显示前端密码遮罩 | [访问遮罩](/features/access-mask/) |
 | 工作区架构 | 多 crate 拆分，核心构建、Markdown、主题、搜索、开发服务器解耦 | [Crates](/internals/crates/) |
 

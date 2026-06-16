@@ -91,7 +91,7 @@ Use root-relative links for site pages. Relative links in locale config are auto
 | Config | Purpose |
 | --- | --- |
 | `top_nav` | Top navigation |
-| `sidebars` | Left sidebar |
+| Markdown paths | Generated sidebar |
 | `locales` | Multilingual routing |
 ```
 

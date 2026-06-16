@@ -62,7 +62,7 @@ access: public
 | 設定 | 用途 |
 | --- | --- |
 | `top_nav` | トップナビ |
-| `sidebars` | サイドバー |
+| Markdown パス | 自動サイドバー |
 ```
 
 ## 引用と脚注

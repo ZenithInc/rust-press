@@ -74,4 +74,4 @@ API 문서라면 `true`로 바꿀 수 있습니다.
 
 ## Markdown 원본
 
-각 페이지에 `index.md.txt`가 생성되며, 테마에서 Markdown과 Markdown URL을 복사할 수 있습니다.
+각 페이지는 같은 라우트 디렉터리에 `index.md.txt`를 출력합니다. 예를 들어 `/guide/cli/`는 `/guide/cli/index.md.txt`를 생성합니다. 테마에서 Markdown 본문과 Markdown URL을 복사할 수 있습니다.

@@ -52,7 +52,6 @@ pub struct Config {
     pub search: SearchSection,
     pub access: AccessSection,
     pub top_nav: Vec<TopNavSection>,
-    pub sidebars: BTreeMap<String, Vec<SidebarSection>>,
     pub locales: BTreeMap<String, LocaleSection>,
 }
 
@@ -96,7 +95,6 @@ pub struct AccessSection {
 pub struct TopNavSection {
     pub text: String,
     pub link: Option<String>,
-    pub sidebar: Option<String>,
     pub items: Vec<TopNavLinkSection>,
 }
 
@@ -109,28 +107,11 @@ pub struct TopNavLinkSection {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-pub struct SidebarSection {
-    pub text: String,
-    pub link: String,
-    pub items: Vec<SidebarLinkSection>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
-pub struct SidebarLinkSection {
-    pub text: String,
-    pub link: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
 pub struct LocaleSection {
     pub label: String,
     pub lang: String,
     pub link: String,
     pub title: Option<String>,
-    pub top_nav: Vec<TopNavSection>,
-    pub sidebars: BTreeMap<String, Vec<SidebarSection>>,
 }
 
 impl Default for Config {
@@ -145,7 +126,6 @@ impl Default for Config {
             search: SearchSection::default(),
             access: AccessSection::default(),
             top_nav: Vec::new(),
-            sidebars: BTreeMap::new(),
             locales: BTreeMap::new(),
         }
     }
@@ -199,7 +179,6 @@ impl Default for TopNavSection {
         Self {
             text: String::new(),
             link: None,
-            sidebar: None,
             items: Vec::new(),
         }
     }
@@ -221,27 +200,6 @@ impl Default for LocaleSection {
             lang: String::new(),
             link: String::new(),
             title: None,
-            top_nav: Vec::new(),
-            sidebars: BTreeMap::new(),
-        }
-    }
-}
-
-impl Default for SidebarSection {
-    fn default() -> Self {
-        Self {
-            text: String::new(),
-            link: String::new(),
-            items: Vec::new(),
-        }
-    }
-}
-
-impl Default for SidebarLinkSection {
-    fn default() -> Self {
-        Self {
-            text: String::new(),
-            link: String::new(),
         }
     }
 }
@@ -250,7 +208,7 @@ impl Config {
     pub fn load(path: &Path) -> Result<Self> {
         let raw = fs::read_to_string(path)
             .with_context(|| format!("failed to read config {}", path.display()))?;
-        reject_legacy_nav_config(&raw, path)?;
+        reject_removed_config(&raw, path)?;
         let mut config: Config = toml::from_str(&raw)
             .with_context(|| format!("failed to parse config {}", path.display()))?;
         config.normalize()?;
@@ -263,7 +221,6 @@ impl Config {
         self.theme.github_url = self.theme.github_url.trim().to_string();
         self.access.password = self.access.password.trim().to_string();
         normalize_top_nav(&mut self.top_nav, None);
-        normalize_sidebars(&mut self.sidebars, None);
 
         if !self.locales.is_empty() {
             if !self.locales.contains_key("root") {
@@ -299,18 +256,12 @@ impl Config {
                     normalize_locale_prefix(&key, &locale.link)?
                 };
             }
-
-            for locale in self.locales.values_mut() {
-                let locale_prefix = locale.link.clone();
-                normalize_top_nav(&mut locale.top_nav, Some(&locale_prefix));
-                normalize_sidebars(&mut locale.sidebars, Some(&locale_prefix));
-            }
         }
         Ok(())
     }
 }
 
-fn reject_legacy_nav_config(raw: &str, path: &Path) -> Result<()> {
+fn reject_removed_config(raw: &str, path: &Path) -> Result<()> {
     let value: toml::Value = toml::from_str(raw)
         .with_context(|| format!("failed to parse config {}", path.display()))?;
 
@@ -321,11 +272,43 @@ fn reject_legacy_nav_config(raw: &str, path: &Path) -> Result<()> {
         );
     }
 
+    if value.get("sidebars").is_some() {
+        anyhow::bail!(
+            "removed config key `sidebars` found in {}; sidebars are generated from docs/ paths",
+            path.display()
+        );
+    }
+
+    if let Some(top_nav) = value.get("top_nav").and_then(toml::Value::as_array) {
+        if top_nav
+            .iter()
+            .filter_map(toml::Value::as_table)
+            .any(|item| item.contains_key("sidebar"))
+        {
+            anyhow::bail!(
+                "removed config key `top_nav.sidebar` found in {}; sidebars are generated from docs/ paths",
+                path.display()
+            );
+        }
+    }
+
     if let Some(locales) = value.get("locales").and_then(toml::Value::as_table) {
         for (locale_key, locale) in locales {
             if locale.get("nav").is_some() {
                 anyhow::bail!(
-                    "deprecated config key `locales.{locale_key}.nav` found in {}; rename `[[locales.{locale_key}.nav]]` to `[[locales.{locale_key}.top_nav]]` and `[[locales.{locale_key}.nav.items]]` to `[[locales.{locale_key}.top_nav.items]]`",
+                    "deprecated config key `locales.{locale_key}.nav` found in {}; configure `[[top_nav]]` once at the root",
+                    path.display()
+                );
+            }
+            if locale.get("top_nav").is_some() {
+                anyhow::bail!(
+                    "removed config key `locales.{locale_key}.top_nav` found in {}; configure `top_nav` once at the root",
+                    path.display()
+                );
+            }
+            if locale.get("sidebars").is_some() {
+                anyhow::bail!(
+                    "removed config key `locales.{locale_key}.sidebars` found in {}; sidebars are generated from docs/ paths",
                     path.display()
                 );
             }
@@ -354,21 +337,8 @@ base = "/"
 [[top_nav]]
 text = "Guide"
 link = "/"
-sidebar = "guide"
 
 [[top_nav.items]]
-text = "Masked Page"
-link = "/private/"
-
-[[sidebars.guide]]
-text = "Guide"
-link = "/"
-
-[[sidebars.guide.items]]
-text = "Home"
-link = "/"
-
-[[sidebars.guide.items]]
 text = "Masked Page"
 link = "/private/"
 
@@ -571,181 +541,106 @@ fn read_pages(src_dir: &Path, config: &Config) -> Result<Vec<Page>> {
 }
 
 fn build_nav(pages: &[Page], config: &Config, page: &Page) -> Vec<NavItem> {
-    if !sidebars_for_locale(config, &page.locale_key).is_empty() {
-        return build_explicit_nav(config, &page.locale_key, &page.route);
-    }
-
-    build_legacy_nav(pages, config, &page.locale_key)
-}
-
-fn build_legacy_nav(pages: &[Page], config: &Config, locale_key: &str) -> Vec<NavItem> {
-    let locale_prefix = home_for_locale(config, locale_key);
-    let group_meta = sidebar_group_meta(
-        top_nav_sections_for_locale(config, locale_key),
-        &locale_prefix,
-    );
-    let mut roots = Vec::new();
-    let mut groups = Vec::<SidebarGroup>::new();
-
-    for page in pages
-        .iter()
-        .filter(|page| page.locale_key == locale_key && page.document.frontmatter.sidebar)
-    {
-        let segments = route_segments(&page.translation_key);
-        let leaf = NavItem {
-            title: page.document.title.clone(),
-            href: page.route.clone(),
-            active_prefix: page.route.clone(),
-            items: Vec::new(),
-        };
-
-        if segments.len() < 2 {
-            roots.push(leaf);
-            continue;
-        }
-
-        let segment = segments[0].to_string();
-        let meta = group_meta.iter().find(|meta| meta.segment == segment);
-        let group_index =
-            if let Some(index) = groups.iter().position(|group| group.segment == segment) {
-                index
-            } else {
-                groups.push(SidebarGroup {
-                    segment: segment.clone(),
-                    title: meta
-                        .map(|meta| meta.title.clone())
-                        .unwrap_or_else(|| titleize_segment(&segment)),
-                    href: meta
-                        .map(|meta| meta.href.clone())
-                        .unwrap_or_else(|| page.route.clone()),
-                    active_prefix: route_with_prefix(&locale_prefix, &format!("/{segment}/")),
-                    order: meta.map(|meta| meta.order).unwrap_or(usize::MAX),
-                    item_order: meta.map(|meta| meta.item_order.clone()).unwrap_or_default(),
-                    items: Vec::new(),
-                });
-                groups.len() - 1
-            };
-        groups[group_index].items.push(leaf);
-    }
-
-    roots.sort_by(|a, b| {
-        let a_home = a.href == locale_prefix;
-        let b_home = b.href == locale_prefix;
-        b_home.cmp(&a_home).then_with(|| a.href.cmp(&b.href))
-    });
-    groups.sort_by(|a, b| {
-        a.order
-            .cmp(&b.order)
-            .then_with(|| a.title.cmp(&b.title))
-            .then_with(|| a.href.cmp(&b.href))
-    });
-    for group in &mut groups {
-        group.items.sort_by(|a, b| {
-            nav_item_order(&group.item_order, &a.href)
-                .cmp(&nav_item_order(&group.item_order, &b.href))
-                .then_with(|| a.href.cmp(&b.href))
-        });
-    }
-
-    roots.extend(groups.into_iter().map(|group| NavItem {
-        title: group.title,
-        href: group.href,
-        active_prefix: group.active_prefix,
-        items: group.items,
-    }));
-    roots
-}
-
-fn build_explicit_nav(config: &Config, locale_key: &str, route: &str) -> Vec<NavItem> {
-    let top_nav = top_nav_sections_for_locale(config, locale_key);
-    let sidebars = sidebars_for_locale(config, locale_key);
-    let Some(sidebar_id) = active_sidebar_id(top_nav, sidebars, route) else {
+    let current_segments = route_segments(&page.translation_key);
+    let Some(section) = current_segments.first().copied() else {
         return Vec::new();
     };
 
-    sidebars
-        .get(sidebar_id)
-        .map(|sections| sidebar_sections_to_nav_items(sections))
-        .unwrap_or_default()
-}
-
-fn active_sidebar_id<'a>(
-    top_nav: &'a [TopNavSection],
-    sidebars: &'a BTreeMap<String, Vec<SidebarSection>>,
-    route: &str,
-) -> Option<&'a str> {
-    if let Some((sidebar, _)) = sidebars
+    let locale_prefix = home_for_locale(config, &page.locale_key);
+    let section_prefix = route_with_prefix(&locale_prefix, &format!("/{section}/"));
+    let mut section_page = None::<&Page>;
+    let mut children = BTreeMap::<String, SidebarChild>::new();
+    let mut candidates = pages
         .iter()
-        .find(|(_, sections)| sidebar_sections_match_route(sections, route))
-    {
-        return Some(sidebar.as_str());
+        .filter(|candidate| {
+            candidate.locale_key == page.locale_key && candidate.document.frontmatter.sidebar
+        })
+        .collect::<Vec<_>>();
+    candidates.sort_by(|a, b| a.translation_key.cmp(&b.translation_key));
+
+    for candidate in candidates {
+        let segments = route_segments(&candidate.translation_key);
+        if segments.first().copied() != Some(section) {
+            continue;
+        }
+
+        if segments.len() == 1 {
+            if section_page.is_none() {
+                section_page = Some(candidate);
+            }
+            continue;
+        }
+
+        let child_segment = segments[1].to_string();
+        let direct_child = segments.len() == 2;
+        let entry = children
+            .entry(child_segment.clone())
+            .or_insert_with(|| SidebarChild {
+                title: if direct_child {
+                    candidate.document.title.clone()
+                } else {
+                    titleize_segment(&child_segment)
+                },
+                href: candidate.route.clone(),
+                active_prefix: route_with_prefix(
+                    &locale_prefix,
+                    &format!("/{section}/{child_segment}/"),
+                ),
+                direct_child,
+            });
+
+        if direct_child && !entry.direct_child {
+            entry.title = candidate.document.title.clone();
+            entry.href = candidate.route.clone();
+            entry.direct_child = true;
+        }
     }
 
-    top_nav
-        .iter()
-        .filter_map(|item| item.sidebar.as_deref().map(|sidebar| (item, sidebar)))
-        .find_map(|(item, sidebar)| {
-            if sidebars.contains_key(sidebar) && top_nav_link_matches_route(item, route) {
-                Some(sidebar)
-            } else {
-                None
-            }
-        })
-}
+    if section_page.is_none() && children.is_empty() {
+        return Vec::new();
+    }
 
-fn top_nav_link_matches_route(item: &TopNavSection, route: &str) -> bool {
-    item.link
-        .as_deref()
-        .is_some_and(|href| route_matches_link(route, href))
-}
+    let first_child_href = children.values().next().map(|child| child.href.clone());
+    let title = section_page
+        .map(|page| page.document.title.clone())
+        .unwrap_or_else(|| titleize_segment(section));
+    let href = section_page
+        .map(|page| page.route.clone())
+        .or(first_child_href)
+        .unwrap_or_else(|| section_prefix.clone());
 
-fn sidebar_sections_match_route(items: &[SidebarSection], route: &str) -> bool {
-    items.iter().any(|item| {
-        route_matches_link(route, &item.link)
-            || item
-                .items
-                .iter()
-                .any(|child| route_matches_link(route, &child.link))
-    })
-}
-
-fn sidebar_sections_to_nav_items(items: &[SidebarSection]) -> Vec<NavItem> {
-    items
-        .iter()
-        .map(|item| NavItem {
-            title: item.text.clone(),
-            href: item.link.clone(),
-            active_prefix: item.link.clone(),
-            items: item
-                .items
-                .iter()
-                .map(|child| NavItem {
-                    title: child.text.clone(),
-                    href: child.link.clone(),
-                    active_prefix: child.link.clone(),
-                    items: Vec::new(),
-                })
-                .collect(),
-        })
-        .collect()
-}
-
-fn route_matches_link(route: &str, href: &str) -> bool {
-    href.starts_with('/') && (route == href || (href != "/" && route.starts_with(href)))
+    vec![NavItem {
+        title,
+        href,
+        active_prefix: section_prefix,
+        items: children
+            .into_values()
+            .map(|child| NavItem {
+                title: child.title,
+                href: child.href,
+                active_prefix: child.active_prefix,
+                items: Vec::new(),
+            })
+            .collect(),
+    }]
 }
 
 fn build_top_nav(config: &Config, locale_key: &str) -> Vec<TopNavItem> {
-    top_nav_sections_for_locale(config, locale_key)
+    config
+        .top_nav
         .iter()
         .map(|item| TopNavItem {
             title: item.text.clone(),
-            href: item.link.clone(),
+            href: item
+                .link
+                .as_ref()
+                .map(|link| top_nav_link_for_locale(config, locale_key, link)),
             items: item
                 .items
                 .iter()
                 .map(|child| TopNavLink {
                     title: child.text.clone(),
-                    href: child.link.clone(),
+                    href: top_nav_link_for_locale(config, locale_key, &child.link),
                 })
                 .collect(),
         })
@@ -753,79 +648,19 @@ fn build_top_nav(config: &Config, locale_key: &str) -> Vec<TopNavItem> {
 }
 
 #[derive(Debug, Clone)]
-struct SidebarGroup {
-    segment: String,
+struct SidebarChild {
     title: String,
     href: String,
     active_prefix: String,
-    order: usize,
-    item_order: Vec<String>,
-    items: Vec<NavItem>,
+    direct_child: bool,
 }
 
-#[derive(Debug, Clone)]
-struct SidebarGroupMeta {
-    segment: String,
-    title: String,
-    href: String,
-    order: usize,
-    item_order: Vec<String>,
-}
-
-fn top_nav_sections_for_locale<'a>(config: &'a Config, locale_key: &str) -> &'a [TopNavSection] {
-    config
-        .locales
-        .get(locale_key)
-        .filter(|locale| !locale.top_nav.is_empty())
-        .map(|locale| locale.top_nav.as_slice())
-        .unwrap_or(config.top_nav.as_slice())
-}
-
-fn sidebars_for_locale<'a>(
-    config: &'a Config,
-    locale_key: &str,
-) -> &'a BTreeMap<String, Vec<SidebarSection>> {
-    config
-        .locales
-        .get(locale_key)
-        .filter(|locale| !locale.sidebars.is_empty())
-        .map(|locale| &locale.sidebars)
-        .unwrap_or(&config.sidebars)
-}
-
-fn sidebar_group_meta(top_nav: &[TopNavSection], locale_prefix: &str) -> Vec<SidebarGroupMeta> {
-    let mut metas = Vec::new();
-    for item in top_nav {
-        let href = item
-            .link
-            .as_deref()
-            .or_else(|| item.items.first().map(|child| child.link.as_str()));
-        let Some(href) = href else { continue };
-        let Some(segment) = first_route_segment(href, locale_prefix) else {
-            continue;
-        };
-        if metas
-            .iter()
-            .any(|meta: &SidebarGroupMeta| meta.segment == segment)
-        {
-            continue;
-        }
-        metas.push(SidebarGroupMeta {
-            segment,
-            title: item.text.clone(),
-            href: href.to_string(),
-            order: metas.len(),
-            item_order: Vec::new(),
-        });
+fn top_nav_link_for_locale(config: &Config, locale_key: &str, link: &str) -> String {
+    if locale_key == "root" || is_external_or_anchor_link(link) {
+        link.to_string()
+    } else {
+        route_with_prefix(&home_for_locale(config, locale_key), link)
     }
-    metas
-}
-
-fn nav_item_order(order: &[String], href: &str) -> usize {
-    order
-        .iter()
-        .position(|item| item == href)
-        .unwrap_or(usize::MAX)
 }
 
 fn build_translation_map(pages: &[Page]) -> BTreeMap<(String, String), String> {
@@ -1050,8 +885,10 @@ fn page_markdown_target(out_dir: &Path, route: &str) -> PathBuf {
 }
 
 fn page_metadata_for(src_dir: &Path, path: &Path, config: &Config) -> Result<PageMetadata> {
+    let relative = path.strip_prefix(src_dir)?;
+
     if config.locales.is_empty() {
-        let route = route_for(src_dir, path)?;
+        let route = route_for_relative(relative);
         return Ok(PageMetadata {
             route: route.clone(),
             locale_key: "root".to_string(),
@@ -1059,39 +896,36 @@ fn page_metadata_for(src_dir: &Path, path: &Path, config: &Config) -> Result<Pag
         });
     }
 
-    let relative = path.strip_prefix(src_dir)?;
-    if let Some((locale_key, locale_relative)) = locale_relative_path(relative, config) {
-        let translation_key = route_for_relative(&locale_relative);
-        let route = route_with_prefix(&config.locales[&locale_key].link, &translation_key);
-        return Ok(PageMetadata {
-            route,
-            locale_key,
-            translation_key,
-        });
-    }
+    let (locale_key, translation_relative) = suffixed_locale_relative_path(relative, config)
+        .unwrap_or_else(|| ("root".to_string(), relative.to_path_buf()));
+    let translation_key = route_for_relative(&translation_relative);
+    let route = if locale_key == "root" {
+        translation_key.clone()
+    } else {
+        route_with_prefix(&config.locales[&locale_key].link, &translation_key)
+    };
 
-    let route = route_for_relative(relative);
     Ok(PageMetadata {
-        route: route.clone(),
-        locale_key: "root".to_string(),
-        translation_key: route,
+        route,
+        locale_key,
+        translation_key,
     })
 }
 
-fn locale_relative_path(relative: &Path, config: &Config) -> Option<(String, PathBuf)> {
-    let mut components = relative.components();
-    let first = components.next()?.as_os_str().to_str()?;
-    if first == "root" || !config.locales.contains_key(first) {
+fn suffixed_locale_relative_path(relative: &Path, config: &Config) -> Option<(String, PathBuf)> {
+    let file_name = relative.file_name()?.to_str()?;
+    let stem = file_name.strip_suffix(".md")?;
+    let (base_stem, locale_key) = stem.rsplit_once('.')?;
+    if locale_key == "root" || !config.locales.contains_key(locale_key) {
         return None;
     }
 
-    let mut locale_relative = PathBuf::new();
-    for component in components {
-        locale_relative.push(component.as_os_str());
-    }
-    Some((first.to_string(), locale_relative))
+    let mut translation_relative = relative.to_path_buf();
+    translation_relative.set_file_name(format!("{base_stem}.md"));
+    Some((locale_key.to_string(), translation_relative))
 }
 
+#[cfg(test)]
 fn route_for(src_dir: &Path, path: &Path) -> Result<String> {
     let relative = path.strip_prefix(src_dir)?;
     Ok(route_for_relative(relative))
@@ -1145,30 +979,6 @@ fn route_segments(route: &str) -> Vec<&str> {
         .collect()
 }
 
-fn first_route_segment(route: &str, locale_prefix: &str) -> Option<String> {
-    if route.starts_with("http://")
-        || route.starts_with("https://")
-        || route.starts_with("mailto:")
-        || route.starts_with('#')
-    {
-        return None;
-    }
-
-    let local_route = if locale_prefix != "/" && route.starts_with(locale_prefix) {
-        let rest = &route[locale_prefix.len()..];
-        if rest.is_empty() {
-            "/".to_string()
-        } else {
-            format!("/{rest}")
-        }
-    } else {
-        route.to_string()
-    };
-    route_segments(&local_route)
-        .first()
-        .map(|segment| (*segment).to_string())
-}
-
 fn titleize_segment(segment: &str) -> String {
     segment
         .split(['-', '_'])
@@ -1200,11 +1010,6 @@ fn normalize_top_nav(top_nav: &mut Vec<TopNavSection>, locale_prefix: Option<&st
     top_nav.retain(|item| !item.text.trim().is_empty());
     for item in top_nav {
         item.text = item.text.trim().to_string();
-        item.sidebar = item
-            .sidebar
-            .take()
-            .map(|sidebar| sidebar.trim().to_string())
-            .filter(|sidebar| !sidebar.is_empty());
         if item
             .link
             .as_deref()
@@ -1222,40 +1027,6 @@ fn normalize_top_nav(top_nav: &mut Vec<TopNavSection>, locale_prefix: Option<&st
             *link = normalize_nav_link(link, locale_prefix);
         }
     }
-}
-
-fn normalize_sidebars(
-    sidebars: &mut BTreeMap<String, Vec<SidebarSection>>,
-    locale_prefix: Option<&str>,
-) {
-    sidebars.retain(|id, items| {
-        if id.trim().is_empty() {
-            return false;
-        }
-
-        for item in items.iter_mut() {
-            item.text = item.text.trim().to_string();
-            item.items
-                .retain(|child| !child.text.trim().is_empty() && !child.link.trim().is_empty());
-            for child in &mut item.items {
-                child.text = child.text.trim().to_string();
-                child.link = normalize_nav_link(&child.link, locale_prefix);
-            }
-
-            item.link = item.link.trim().to_string();
-            if item.link.is_empty() {
-                if let Some(first_child) = item.items.first() {
-                    item.link = first_child.link.clone();
-                }
-            } else {
-                item.link = normalize_nav_link(&item.link, locale_prefix);
-            }
-        }
-
-        items.retain(|item| !item.text.is_empty() && !item.link.is_empty());
-
-        !items.is_empty()
-    });
 }
 
 fn normalize_nav_link(link: &str, locale_prefix: Option<&str>) -> String {
@@ -1316,17 +1087,18 @@ fn normalize_theme_skin(skin: &str) -> String {
 
 fn normalize_link(link: &str) -> String {
     let link = link.trim();
-    if link.is_empty()
-        || link.starts_with('/')
-        || link.starts_with('#')
-        || link.starts_with("http://")
-        || link.starts_with("https://")
-        || link.starts_with("mailto:")
-    {
+    if link.is_empty() || link.starts_with('/') || is_external_or_anchor_link(link) {
         link.to_string()
     } else {
         format!("/{link}")
     }
+}
+
+fn is_external_or_anchor_link(link: &str) -> bool {
+    link.starts_with('#')
+        || link.starts_with("http://")
+        || link.starts_with("https://")
+        || link.starts_with("mailto:")
 }
 
 fn normalize_config_path(path: &Path) -> Result<PathBuf> {
@@ -1578,7 +1350,6 @@ github_url = " https://github.com/example/docs "
             top_nav: vec![TopNavSection {
                 text: " Guide ".to_string(),
                 link: Some("guide/cli/".to_string()),
-                sidebar: None,
                 items: vec![
                     TopNavLinkSection {
                         text: " CLI ".to_string(),
@@ -1603,45 +1374,48 @@ github_url = " https://github.com/example/docs "
     }
 
     #[test]
-    fn sidebar_links_are_normalized() {
-        let mut sidebars = BTreeMap::new();
-        sidebars.insert(
-            "docs".to_string(),
-            vec![SidebarSection {
-                text: " Guide ".to_string(),
-                link: String::new(),
-                items: vec![
-                    SidebarLinkSection {
-                        text: " CLI ".to_string(),
-                        link: "guide/cli/".to_string(),
-                    },
-                    SidebarLinkSection {
-                        text: String::new(),
-                        link: "/bad/".to_string(),
-                    },
-                ],
-            }],
-        );
-        let mut config = Config {
-            top_nav: vec![TopNavSection {
-                text: "Guide".to_string(),
-                link: Some("/guide/".to_string()),
-                sidebar: Some(" docs ".to_string()),
-                items: Vec::new(),
-            }],
-            sidebars,
-            ..Config::default()
-        };
+    fn removed_root_sidebars_config_is_rejected_on_load() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(
+            dir.path().join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
 
-        config.normalize().unwrap();
+[[sidebars.guide]]
+text = "Guide"
+link = "/guide/"
+"#,
+        )
+        .unwrap();
 
-        assert_eq!(config.top_nav[0].sidebar.as_deref(), Some("docs"));
-        let sidebar = &config.sidebars["docs"][0];
-        assert_eq!(sidebar.text, "Guide");
-        assert_eq!(sidebar.link, "/guide/cli/");
-        assert_eq!(sidebar.items.len(), 1);
-        assert_eq!(sidebar.items[0].text, "CLI");
-        assert_eq!(sidebar.items[0].link, "/guide/cli/");
+        let err = Config::load(&dir.path().join("rustpress.toml")).unwrap_err();
+
+        assert!(err.to_string().contains("sidebars"));
+    }
+
+    #[test]
+    fn removed_top_nav_sidebar_config_is_rejected_on_load() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(
+            dir.path().join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[[top_nav]]
+text = "Guide"
+link = "/guide/"
+sidebar = "guide"
+"#,
+        )
+        .unwrap();
+
+        let err = Config::load(&dir.path().join("rustpress.toml")).unwrap_err();
+
+        assert!(err.to_string().contains("top_nav.sidebar"));
     }
 
     #[test]
@@ -1662,21 +1436,8 @@ github_url = " https://github.com/example/docs "
     }
 
     #[test]
-    fn locale_links_and_relative_top_nav_are_normalized() {
+    fn locale_links_and_root_top_nav_are_localized() {
         let mut config = localized_config();
-        let locale = config.locales.get_mut("en").unwrap();
-        locale.top_nav[0].sidebar = Some(" guide ".to_string());
-        locale.sidebars.insert(
-            "guide".to_string(),
-            vec![SidebarSection {
-                text: " Guide ".to_string(),
-                link: "guide/cli/".to_string(),
-                items: vec![SidebarLinkSection {
-                    text: "CLI".to_string(),
-                    link: "guide/cli/".to_string(),
-                }],
-            }],
-        );
 
         config.normalize().unwrap();
 
@@ -1686,11 +1447,10 @@ github_url = " https://github.com/example/docs "
         assert_eq!(root.lang, "zh-CN");
         assert_eq!(root.link, "/");
         assert_eq!(en.link, "/en/");
-        assert_eq!(en.top_nav[0].link.as_deref(), Some("/en/guide/cli/"));
-        assert_eq!(en.top_nav[0].sidebar.as_deref(), Some("guide"));
-        assert_eq!(en.top_nav[0].items[0].link, "/en/guide/cli/");
-        assert_eq!(en.sidebars["guide"][0].link, "/en/guide/cli/");
-        assert_eq!(en.sidebars["guide"][0].items[0].link, "/en/guide/cli/");
+        let en_top_nav = build_top_nav(&config, "en");
+        assert_eq!(en_top_nav[0].href.as_deref(), Some("/en/guide/cli/"));
+        assert_eq!(en_top_nav[0].items[0].href, "/en/guide/cli/");
+        assert_eq!(en_top_nav[1].href.as_deref(), Some("https://example.com"));
     }
 
     #[test]
@@ -1748,7 +1508,67 @@ link = "guide/"
     }
 
     #[test]
-    fn explicit_sidebars_ignore_top_nav_dropdown_items() {
+    fn removed_locale_top_nav_config_is_rejected_on_load() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(
+            dir.path().join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[locales.root]
+label = "简体中文"
+lang = "zh-CN"
+
+[locales.en]
+label = "English"
+lang = "en-US"
+
+[[locales.en.top_nav]]
+text = "Guide"
+link = "guide/"
+"#,
+        )
+        .unwrap();
+
+        let err = Config::load(&dir.path().join("rustpress.toml")).unwrap_err();
+
+        assert!(err.to_string().contains("locales.en.top_nav"));
+    }
+
+    #[test]
+    fn removed_locale_sidebars_config_is_rejected_on_load() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(
+            dir.path().join("rustpress.toml"),
+            r#"title = "Docs"
+src_dir = "docs"
+out_dir = "dist"
+base = "/"
+
+[locales.root]
+label = "简体中文"
+lang = "zh-CN"
+
+[locales.en]
+label = "English"
+lang = "en-US"
+
+[[locales.en.sidebars.guide]]
+text = "Guide"
+link = "guide/"
+"#,
+        )
+        .unwrap();
+
+        let err = Config::load(&dir.path().join("rustpress.toml")).unwrap_err();
+
+        assert!(err.to_string().contains("locales.en.sidebars"));
+    }
+
+    #[test]
+    fn generated_sidebars_are_scoped_to_current_directory_section() {
         let dir = tempfile::tempdir().unwrap();
         fs::create_dir_all(dir.path().join("docs")).unwrap();
         fs::write(
@@ -1760,41 +1580,15 @@ base = "/"
 
 [[top_nav]]
 text = "Guide"
-link = "/guide/cli/"
-sidebar = "guide"
+link = "/guide/"
 
 [[top_nav.items]]
 text = "Quick Start"
 link = "/guide/quick-start/"
 
 [[top_nav]]
-text = "Reference"
-link = "/reference/"
-sidebar = "reference"
-
-[[top_nav.items]]
-text = "Reference Overview"
-link = "/reference/"
-
-[[sidebars.guide]]
-text = "Guide"
-link = "/guide/cli/"
-
-[[sidebars.guide.items]]
-text = "CLI"
-link = "/guide/cli/"
-
-[[sidebars.guide.items]]
-text = "Configuration"
-link = "/guide/configuration/"
-
-[[sidebars.reference]]
-text = "Reference"
-link = "/reference/"
-
-[[sidebars.reference.items]]
-text = "API"
-link = "/reference/api/"
+text = "Features"
+link = "/features/"
 "#,
         )
         .unwrap();
@@ -1815,42 +1609,50 @@ link = "/reference/api/"
         .unwrap();
         write_doc(
             dir.path(),
-            "docs/reference/api.md",
-            "Reference API",
-            "Reference API",
+            "docs/guide/advanced/deep.md",
+            "Deep Guide",
+            "Deep Guide",
         )
         .unwrap();
+        write_doc(dir.path(), "docs/features/search.md", "Search", "Search").unwrap();
+        fs::write(
+            dir.path().join("docs/guide/hidden.md"),
+            "---\ntitle: Hidden\nsidebar: false\n---\n# Hidden\n",
+        )
+        .unwrap();
+        write_doc(dir.path(), "docs/index.md", "Home", "Home").unwrap();
 
         build_site(BuildOptions::new(dir.path().join("rustpress.toml"))).unwrap();
 
         let guide_html = fs::read_to_string(dir.path().join("dist/guide/cli/index.html")).unwrap();
-        let quick_start_html =
-            fs::read_to_string(dir.path().join("dist/guide/quick-start/index.html")).unwrap();
-        let reference_html =
-            fs::read_to_string(dir.path().join("dist/reference/api/index.html")).unwrap();
+        let features_html =
+            fs::read_to_string(dir.path().join("dist/features/search/index.html")).unwrap();
+        let home_html = fs::read_to_string(dir.path().join("dist/index.html")).unwrap();
+        assert!(dir.path().join("dist/guide/hidden/index.html").exists());
         assert!(guide_html.contains("rp-topnav-menu-link"));
         assert!(guide_html.contains(
             r#"<a class="rp-topnav-menu-link" href="/guide/quick-start/">Quick Start</a>"#
         ));
-        assert!(!guide_html.contains(
-            r#"<a class="rp-topnav-menu-link" href="/guide/configuration/">Configuration</a>"#
-        ));
         assert!(guide_html.contains(
             r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/configuration/">Configuration</a>"#
         ));
-        assert!(!guide_html.contains(
+        assert!(guide_html.contains(
             r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/quick-start/">Quick Start</a>"#
         ));
-        assert!(!guide_html
-            .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/reference/api/">API</a>"#));
-        assert!(!quick_start_html
-            .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/cli/">CLI</a>"#));
-        assert!(!quick_start_html.contains(
-            r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/configuration/">Configuration</a>"#
+        assert!(guide_html.contains(
+            r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/advanced/deep/">Advanced</a>"#
         ));
-        assert!(reference_html.contains("API"));
-        assert!(!reference_html
-            .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/cli/">CLI</a>"#));
+        assert!(!guide_html
+            .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/hidden/">Hidden</a>"#));
+        assert!(!guide_html.contains(
+            r#"<a class="rp-nav-link rp-nav-level-1" href="/features/search/">Search</a>"#
+        ));
+        assert!(features_html.contains(
+            r#"<a class="rp-nav-link rp-nav-level-1 is-active" href="/features/search/">Search</a>"#
+        ));
+        assert!(!features_html
+            .contains(r#"<a class="rp-nav-link rp-nav-level-1" href="/guide/cli/">Guide CLI</a>"#));
+        assert!(!home_html.contains("rp-nav-link"));
     }
 
     #[test]
@@ -1889,15 +1691,20 @@ link = "/reference/api/"
                 .route,
             "/guide/"
         );
-        let en_home = page_metadata_for(src, Path::new("/site/docs/en/index.md"), &config).unwrap();
+        let en_home = page_metadata_for(src, Path::new("/site/docs/index.en.md"), &config).unwrap();
         assert_eq!(en_home.route, "/en/");
         assert_eq!(en_home.locale_key, "en");
         assert_eq!(en_home.translation_key, "/");
         let en_guide =
-            page_metadata_for(src, Path::new("/site/docs/en/guide.md"), &config).unwrap();
+            page_metadata_for(src, Path::new("/site/docs/guide.en.md"), &config).unwrap();
         assert_eq!(en_guide.route, "/en/guide/");
         assert_eq!(en_guide.locale_key, "en");
         assert_eq!(en_guide.translation_key, "/guide/");
+        let en_cli =
+            page_metadata_for(src, Path::new("/site/docs/guide/cli.en.md"), &config).unwrap();
+        assert_eq!(en_cli.route, "/en/guide/cli/");
+        assert_eq!(en_cli.locale_key, "en");
+        assert_eq!(en_cli.translation_key, "/guide/cli/");
     }
 
     #[test]
@@ -1910,21 +1717,21 @@ link = "/reference/api/"
         write_doc(dir.path(), "docs/root-only.md", "Root Only", "Root Only").unwrap();
         write_doc(
             dir.path(),
-            "docs/en/index.md",
+            "docs/index.en.md",
             "English Home",
             "English Home",
         )
         .unwrap();
         write_doc(
             dir.path(),
-            "docs/en/guide.md",
+            "docs/guide.en.md",
             "English Guide",
             "English Guide",
         )
         .unwrap();
         write_doc(
             dir.path(),
-            "docs/en/guide/cli.md",
+            "docs/guide/cli.en.md",
             "English CLI",
             "English CLI",
         )
@@ -1963,7 +1770,7 @@ link = "/reference/api/"
         write_doc(dir.path(), "docs/guide.md", "Root Guide", "Root Guide").unwrap();
         write_doc(
             dir.path(),
-            "docs/en/index.md",
+            "docs/index.en.md",
             "English Home",
             "English Home",
         )
@@ -2031,19 +1838,25 @@ link = "/reference/api/"
             LocaleSection {
                 label: "English".to_string(),
                 lang: "en-US".to_string(),
-                top_nav: vec![TopNavSection {
-                    text: "Guide".to_string(),
-                    link: Some("guide/cli/".to_string()),
-                    sidebar: None,
-                    items: vec![TopNavLinkSection {
-                        text: "CLI".to_string(),
-                        link: "guide/cli/".to_string(),
-                    }],
-                }],
                 ..LocaleSection::default()
             },
         );
         Config {
+            top_nav: vec![
+                TopNavSection {
+                    text: "Guide".to_string(),
+                    link: Some("guide/cli/".to_string()),
+                    items: vec![TopNavLinkSection {
+                        text: "CLI".to_string(),
+                        link: "guide/cli/".to_string(),
+                    }],
+                },
+                TopNavSection {
+                    text: "External".to_string(),
+                    link: Some("https://example.com".to_string()),
+                    items: Vec::new(),
+                },
+            ],
             locales,
             ..Config::default()
         }
@@ -2071,10 +1884,6 @@ label = "English"
 lang = "en-US"
 link = "/en/"
 title = "English Docs"
-
-[[locales.en.top_nav]]
-text = "Guide"
-link = "guide/"
 "#,
         )?;
         Ok(())

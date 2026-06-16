@@ -30,7 +30,7 @@ rust-press build --help
 rust-press init my-docs
 ```
 
-상단 내비게이션, 사이드바, 테마, 검색, 접근 마스크 예제가 포함된 최소 프로젝트를 만듭니다.
+상단 내비게이션, 테마, 검색, 접근 마스크 예제가 포함된 최소 프로젝트를 만듭니다. 사이드바는 Markdown 경로에서 자동 생성됩니다.
 
 ## build
 
@@ -38,7 +38,7 @@ rust-press init my-docs
 rust-press build --config rustpress.toml
 ```
 
-빌드는 설정을 로드하고 Markdown을 파싱한 뒤 페이지, 내비게이션, 사이드바, 목차, 언어 전환, 검색 인덱스, 테마 자산을 생성합니다. 빌드 전에 `out_dir`은 삭제됩니다.
+빌드는 설정을 로드하고 Markdown을 파싱한 뒤 페이지, 내비게이션, 자동 사이드바, 목차, 언어 전환, 검색 인덱스, 테마 자산을 생성합니다. 빌드 전에 `out_dir`은 삭제됩니다.
 
 ## dev
 
@@ -47,6 +47,8 @@ rust-press dev --config rustpress.toml --host 127.0.0.1 --port 5177
 ```
 
 `dev`는 한 번 빌드한 뒤 `src_dir`과 설정 파일을 감시하고 변경 시 다시 빌드합니다. HTML에는 live reload script가 삽입됩니다.
+
+`dev`에서는 로컬 URL이 서버 루트에서 동작하도록 빌드 시 `base = "/"`를 임시로 사용합니다. `build`와 `preview`는 설정된 배포용 `base`를 그대로 사용합니다.
 
 ## preview
 
