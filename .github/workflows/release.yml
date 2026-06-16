@@ -145,7 +145,23 @@ jobs:
 
           crate_published() {
             local crate="$1"
-            cargo search "${crate}" --limit 1 2>/dev/null | grep -q "^${crate} = \"${version}\""
+            local response
+            response="$(curl -fsSL -H "User-Agent: rust-press-release-check" "https://crates.io/api/v1/crates/${crate}" 2>/dev/null)" || return 1
+            CRATE_VERSION="${version}" python3 -c '
+          import json
+          import os
+          import sys
+
+          data = json.load(sys.stdin)
+          expected = os.environ["CRATE_VERSION"]
+          crate = data.get("crate", {})
+          if crate.get("newest_version") == expected or crate.get("max_version") == expected or crate.get("default_version") == expected:
+              raise SystemExit(0)
+          for version in data.get("versions", []):
+              if version.get("num") == expected and not version.get("yanked", False):
+                  raise SystemExit(0)
+          raise SystemExit(1)
+          ' <<< "${response}"
           }
 
           wait_for_crate() {
